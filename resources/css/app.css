@@ -1,11 +1,386 @@
-@import 'tailwindcss';
-
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+@import "tailwindcss";
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-brand-50: #FFF7ED;
+    --color-brand-100: #FFEDD5;
+    --color-brand-200: #FED7AA;
+    --color-brand-300: #FDBA74;
+    --color-brand-400: #FB923C;
+    --color-brand-500: #F26522;
+    --color-brand-600: #EA580C;
+    --color-brand-700: #C2410C;
+    --color-brand-800: #9A3412;
+    --color-brand-900: #7C2D12;
+
+    --color-surface-50: #FAFAF8;
+    --color-surface-100: #F5F5F0;
+    --color-surface-200: #E8E8E3;
+    --color-surface-300: #D4D4CF;
+    --color-surface-800: #1E1E2E;
+    --color-surface-900: #13131F;
+    --color-surface-950: #0B0B14;
+
+    --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+    --font-body: "Inter", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+    --animate-fade-in: fade-in 0.5s ease-out both;
+    --animate-fade-up: fade-up 0.6s ease-out both;
+    --animate-slide-in-right: slide-in-right 0.4s ease-out both;
+    --animate-slide-in-left: slide-in-left 0.4s ease-out both;
+    --animate-scale-in: scale-in 0.3s ease-out both;
+    --animate-bounce-in: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) both;
+    --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
+    --animate-shimmer: shimmer 2s linear infinite;
+    --animate-float: float 3s ease-in-out infinite;
+    --animate-spin-slow: spin 3s linear infinite;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+    from { opacity: 0; transform: translateX(40px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-left {
+    from { opacity: 0; transform: translateX(-40px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scale-in {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bounce-in {
+    from { opacity: 0; transform: scale(0.3); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+}
+
+@keyframes progress-bar {
+    from { width: 0%; }
+    to { width: var(--progress); }
+}
+
+@keyframes dot-pulse {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Base ──────────────────────────────────────────── */
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: var(--font-body);
+    background: var(--color-surface-50);
+    color: #1a1a2e;
+    overflow-x: hidden;
+}
+
+::selection {
+    background: var(--color-brand-200);
+    color: var(--color-brand-900);
+}
+
+/* ── Custom Scrollbar ──────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d4d4cf; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #a3a3a3; }
+
+/* ── Loading skeleton ──────────────────────────────── */
+.skeleton {
+    background: linear-gradient(90deg, #e8e8e3 25%, #f5f5f0 50%, #e8e8e3 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+    border-radius: 8px;
+}
+
+/* ── Stagger children animation ────────────────────── */
+.stagger-children > * {
+    opacity: 0;
+    animation: fade-up 0.5s ease-out forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(9) { animation-delay: 0.45s; }
+.stagger-children > *:nth-child(10) { animation-delay: 0.5s; }
+.stagger-children > *:nth-child(11) { animation-delay: 0.55s; }
+.stagger-children > *:nth-child(12) { animation-delay: 0.6s; }
+
+/* ── Glassmorphism panels ──────────────────────────── */
+.glass {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.glass-dark {
+    background: rgba(30, 30, 46, 0.80);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ── Order status progress ─────────────────────────── */
+.status-track {
+    position: relative;
+}
+.status-track::before {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    height: 3px;
+    background: #e8e8e3;
+    border-radius: 999px;
+}
+.status-track .progress-fill {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-brand-500), var(--color-brand-400));
+    border-radius: 999px;
+    transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ── Dot loading indicator ─────────────────────────── */
+.dot-loading span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-brand-500);
+    animation: dot-pulse 1.4s ease-in-out infinite;
+}
+.dot-loading span:nth-child(2) { animation-delay: 0.2s; }
+.dot-loading span:nth-child(3) { animation-delay: 0.4s; }
+
+/* ── Map container ─────────────────────────────────── */
+.map-container {
+    background: #e8e8e3;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+}
+.map-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+    pointer-events: none;
+}
+
+/* ── Surge pricing badge pulse ─────────────────────── */
+.surge-badge {
+    position: relative;
+}
+.surge-badge::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    background: var(--color-brand-500);
+    opacity: 0.3;
+    animation: pulse-soft 1.5s ease-in-out infinite;
+}
+
+/* ── Sidebar nav active state ──────────────────────── */
+.sidebar-nav a.active {
+    background: linear-gradient(135deg, var(--color-brand-50), var(--color-brand-100));
+    color: var(--color-brand-700);
+    font-weight: 600;
+    border-right: 3px solid var(--color-brand-500);
+}
+
+.sidebar-nav-dark a.active {
+    background: linear-gradient(135deg, rgba(242, 101, 34, 0.15), rgba(242, 101, 34, 0.08));
+    color: var(--color-brand-400);
+    font-weight: 600;
+    border-right: 3px solid var(--color-brand-500);
+}
+
+/* ── Toast notifications ───────────────────────────── */
+.toast-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+}
+.toast-container .toast {
+    pointer-events: auto;
+    animation: slide-in-right 0.4s ease-out both;
+}
+
+/* ── Category pill hover ───────────────────────────── */
+.category-pill {
+    transition: all 0.25s ease;
+}
+.category-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(242, 101, 34, 0.2);
+}
+.category-pill.active {
+    background: var(--color-brand-500);
+    color: white;
+    box-shadow: 0 4px 14px rgba(242, 101, 34, 0.35);
+}
+
+/* ── Restaurant card hover ─────────────────────────── */
+.restaurant-card {
+    transition: all 0.3s ease;
+}
+.restaurant-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+.restaurant-card:hover .card-img {
+    transform: scale(1.05);
+}
+.card-img {
+    transition: transform 0.5s ease;
+}
+
+/* ── Cart item slide ───────────────────────────────── */
+.cart-item {
+    transition: all 0.3s ease;
+}
+.cart-item:hover {
+    background: var(--color-surface-100);
+}
+
+/* ── Stats counter animation ───────────────────────── */
+.stat-number {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Rating stars ──────────────────────────────────── */
+.star-rating {
+    display: inline-flex;
+    gap: 2px;
+}
+.star-rating .star {
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+.star-rating .star:hover {
+    transform: scale(1.2);
+}
+.star-rating .star.filled {
+    color: #FBBF24;
+}
+.star-rating .star.empty {
+    color: #D4D4CF;
+}
+
+/* ── Order timeline ────────────────────────────────── */
+.order-timeline {
+    position: relative;
+    padding-left: 32px;
+}
+.order-timeline::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: #e8e8e3;
+}
+.order-timeline .timeline-dot {
+    position: absolute;
+    left: 4px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #e8e8e3;
+    background: white;
+    z-index: 1;
+}
+.order-timeline .timeline-dot.completed {
+    background: var(--color-brand-500);
+    border-color: var(--color-brand-500);
+}
+.order-timeline .timeline-dot.current {
+    background: white;
+    border-color: var(--color-brand-500);
+    box-shadow: 0 0 0 4px rgba(242, 101, 34, 0.2);
+}
+
+/* ── Mobile bottom nav ─────────────────────────────── */
+.mobile-bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.mobile-bottom-nav a.active svg {
+    color: var(--color-brand-500);
+}
+.mobile-bottom-nav a.active span {
+    color: var(--color-brand-500);
+    font-weight: 600;
+}
+
+/* ── Quantity stepper ──────────────────────────────── */
+.qty-stepper button {
+    transition: all 0.15s ease;
+}
+.qty-stepper button:hover {
+    background: var(--color-brand-500);
+    color: white;
+}
+.qty-stepper button:active {
+    transform: scale(0.9);
+}
+
+/* ── Chart placeholder styles ──────────────────────── */
+.chart-bar {
+    transition: height 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border-radius: 4px 4px 0 0;
+}
+
+/* ── Print styles ──────────────────────────────────── */
+@media print {
+    .no-print { display: none !important; }
+    body { background: white; }
 }
