@@ -6,11 +6,15 @@
     <h1 class="text-2xl font-display font-bold tracking-tight">Welcome back</h1>
     <p class="text-sm text-surface-800/60 mt-2">Sign in to your account to continue ordering.</p>
 
-    <form class="mt-8 space-y-5" method="POST" action="#">
+    <form class="mt-8 space-y-5" method="POST" action="{{ route('login.post') }}">
+        @csrf
         <div>
             <label for="email" class="block text-sm font-medium text-surface-800 mb-1.5">Email address</label>
-            <input id="email" type="email" name="email" required autocomplete="email" placeholder="you@example.com"
-                class="w-full px-4 py-3 rounded-xl bg-surface-50 border border-surface-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 placeholder:text-surface-300 transition-all">
+            <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="you@example.com"
+                class="w-full px-4 py-3 rounded-xl bg-surface-50 border @error('email') border-red-500 @else border-surface-200 @enderror text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 placeholder:text-surface-300 transition-all">
+            @error('email')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+            @enderror
         </div>
 
         <div>
@@ -33,9 +37,9 @@
             <label for="remember" class="text-sm text-surface-800/70">Keep me signed in</label>
         </div>
 
-        <a href="{{ route('customer.home') }}" class="w-full flex items-center justify-center px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl shadow-md shadow-brand-500/25 hover:shadow-brand-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all">
+        <button type="submit" class="w-full flex items-center justify-center px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl shadow-md shadow-brand-500/25 hover:shadow-brand-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all">
             Sign In
-        </a>
+        </button>
     </form>
 
     <div class="mt-6 relative">
