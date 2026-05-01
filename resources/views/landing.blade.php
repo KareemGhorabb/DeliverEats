@@ -28,8 +28,25 @@
                     <a href="#partner" class="text-sm font-medium text-surface-800/70 hover:text-brand-600 transition-colors">Partner With Us</a>
                 </div>
                 <div class="flex items-center gap-3">
-                    <a href="{{ route('login') }}" class="px-4 py-2 text-sm font-medium text-surface-800/80 hover:text-brand-600 transition-colors">Sign In</a>
-                    <a href="{{ route('register') }}" class="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl shadow-md shadow-brand-500/25 hover:shadow-brand-500/40 hover:scale-105 transition-all">Get Started</a>
+                    @auth
+                        @php
+                            $dashboardRoute = match (auth()->user()->role) {
+                                'admin' => route('admin.dashboard'),
+                                'restaurant_owner' => route('restaurant.dashboard'),
+                                'rider' => route('rider.dashboard'),
+                                default => route('customer.home'),
+                            };
+                        @endphp
+                        <a href="{{ $dashboardRoute }}" class="px-4 py-2 text-sm font-medium text-surface-800/80 hover:text-brand-600 transition-colors">Dashboard</a>
+                        <form method="POST" action="{{ route('logout') }}" class="inline">
+                            @csrf
+                            <button type="submit" class="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl shadow-md shadow-brand-500/25 hover:shadow-brand-500/40 hover:scale-105 transition-all">Log Out</button>
+                        </form>
+                    @endauth
+                    @guest
+                        <a href="{{ route('login') }}" class="px-4 py-2 text-sm font-medium text-surface-800/80 hover:text-brand-600 transition-colors">Sign In</a>
+                        <a href="{{ route('register') }}" class="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl shadow-md shadow-brand-500/25 hover:shadow-brand-500/40 hover:scale-105 transition-all">Get Started</a>
+                    @endguest
                 </div>
             </div>
         </div>

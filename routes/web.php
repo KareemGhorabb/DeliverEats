@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -8,8 +9,16 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 Route::get('/', fn () => view('landing'))->name('home');
-Route::get('/login', fn () => view('auth.login'))->name('login');
-Route::get('/register', fn () => view('auth.register'))->name('register');
+
+Route::middleware('guest')->group(function () {
+    Route::get('/login', fn () => view('auth.login'))->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+    
+    Route::get('/register', fn () => view('auth.register'))->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+});
+
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 /*
 |--------------------------------------------------------------------------
@@ -23,20 +32,22 @@ Route::prefix('browse')->name('customer.')->group(function () {
     Route::get('/checkout', fn () => view('customer.checkout'))->name('checkout');
 });
 
-Route::prefix('orders')->name('customer.orders.')->group(function () {
-    Route::get('/', fn () => view('customer.orders'))->name('index');
-    Route::get('/{id}/track', fn ($id) => view('customer.track-order', ['id' => $id]))->name('track');
-    Route::get('/{id}/review', fn ($id) => view('customer.review', ['id' => $id]))->name('review');
-});
+Route::middleware('auth')->group(function () {
+    Route::prefix('orders')->name('customer.orders.')->group(function () {
+        Route::get('/', fn () => view('customer.orders'))->name('index');
+        Route::get('/{id}/track', fn ($id) => view('customer.track-order', ['id' => $id]))->name('track');
+        Route::get('/{id}/review', fn ($id) => view('customer.review', ['id' => $id]))->name('review');
+    });
 
-Route::get('/profile', fn () => view('customer.profile'))->name('customer.profile');
+    Route::get('/profile', fn () => view('customer.profile'))->name('customer.profile');
+});
 
 /*
 |--------------------------------------------------------------------------
 | Restaurant Dashboard Routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('restaurant')->name('restaurant.')->group(function () {
+Route::middleware('auth')->prefix('restaurant')->name('restaurant.')->group(function () {
     Route::get('/dashboard', fn () => view('restaurant.dashboard'))->name('dashboard');
     Route::get('/menu', fn () => view('restaurant.menu'))->name('menu');
     Route::get('/orders', fn () => view('restaurant.orders'))->name('orders');
@@ -50,7 +61,7 @@ Route::prefix('restaurant')->name('restaurant.')->group(function () {
 | Rider Dashboard Routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('rider')->name('rider.')->group(function () {
+Route::middleware('auth')->prefix('rider')->name('rider.')->group(function () {
     Route::get('/dashboard', fn () => view('rider.dashboard'))->name('dashboard');
     Route::get('/delivery/{id}', fn ($id) => view('rider.delivery', ['id' => $id]))->name('delivery');
     Route::get('/earnings', fn () => view('rider.earnings'))->name('earnings');
@@ -61,7 +72,7 @@ Route::prefix('rider')->name('rider.')->group(function () {
 | Admin Routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', fn () => view('admin.dashboard'))->name('dashboard');
     Route::get('/control-tower', fn () => view('admin.control-tower'))->name('control-tower');
     Route::get('/users', fn () => view('admin.users'))->name('users');
