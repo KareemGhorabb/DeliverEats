@@ -28,25 +28,14 @@
                     <a href="#partner" class="text-sm font-medium text-surface-800/70 hover:text-brand-600 transition-colors">Partner With Us</a>
                 </div>
                 <div class="flex items-center gap-3">
-                    @auth
-                        @php
-                            $dashboardRoute = match (auth()->user()->role) {
-                                'admin' => route('admin.dashboard'),
-                                'restaurant_owner' => route('restaurant.dashboard'),
-                                'rider' => route('rider.dashboard'),
-                                default => route('customer.home'),
-                            };
-                        @endphp
-                        <a href="{{ $dashboardRoute }}" class="px-4 py-2 text-sm font-medium text-surface-800/80 hover:text-brand-600 transition-colors">Dashboard</a>
-                        <form method="POST" action="{{ route('logout') }}" class="inline">
-                            @csrf
-                            <button type="submit" class="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl shadow-md shadow-brand-500/25 hover:shadow-brand-500/40 hover:scale-105 transition-all">Log Out</button>
-                        </form>
-                    @endauth
-                    @guest
+                    <div id="auth-buttons" style="display: none;" class="items-center gap-3">
+                        <a href="#" id="dashboard-btn" class="px-4 py-2 text-sm font-medium text-surface-800/80 hover:text-brand-600 transition-colors">Dashboard</a>
+                        <button id="logout-btn" class="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl shadow-md shadow-brand-500/25 hover:shadow-brand-500/40 hover:scale-105 transition-all">Log Out</button>
+                    </div>
+                    <div id="guest-buttons" style="display: none;" class="items-center gap-3">
                         <a href="{{ route('login') }}" class="px-4 py-2 text-sm font-medium text-surface-800/80 hover:text-brand-600 transition-colors">Sign In</a>
                         <a href="{{ route('register') }}" class="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl shadow-md shadow-brand-500/25 hover:shadow-brand-500/40 hover:scale-105 transition-all">Get Started</a>
-                    @endguest
+                    </div>
                 </div>
             </div>
         </div>
@@ -360,5 +349,42 @@
             </div>
         </div>
     </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const token = localStorage.getItem('auth_token');
+        const authButtons = document.getElementById('auth-buttons');
+        const guestButtons = document.getElementById('guest-buttons');
+        
+        if (token) {
+            authButtons.style.display = 'flex';
+            try {
+                const res = await fetch('/api/profile', {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                });
+                if (res.ok) {
+                    const user = await res.json();
+                    const dashBtn = document.getElementById('dashboard-btn');
+                    if (user.role === 'admin') dashBtn.href = '/admin/dashboard';
+                    else if (user.role === 'restaurant_owner') dashBtn.href = '/restaurant/dashboard';
+                    else if (user.role === 'rider') dashBtn.href = '/rider/dashboard';
+                    else dashBtn.href = '/browse';
+                } else {
+                    localStorage.removeItem('auth_token');
+                    authButtons.style.display = 'none';
+                    guestButtons.style.display = 'flex';
+                }
+            } catch(e) {}
+
+            document.getElementById('logout-btn').addEventListener('click', async () => {
+                await fetch('/api/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }});
+                localStorage.removeItem('auth_token');
+                window.location.reload();
+            });
+        } else {
+            guestButtons.style.display = 'flex';
+        }
+    });
+    </script>
 </body>
 </html>

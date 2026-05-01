@@ -6,7 +6,7 @@
     <h1 class="text-2xl font-display font-bold tracking-tight">Welcome back</h1>
     <p class="text-sm text-surface-800/60 mt-2">Sign in to your account to continue ordering.</p>
 
-    <form class="mt-8 space-y-5" method="POST" action="{{ route('login.post') }}">
+    <form id="loginForm" class="mt-8 space-y-5" method="POST" action="/api/login">
         @csrf
         <div>
             <label for="email" class="block text-sm font-medium text-surface-800 mb-1.5">Email address</label>
@@ -62,4 +62,58 @@
         Don't have an account? <a href="{{ route('register') }}" class="font-semibold text-brand-600 hover:text-brand-700 transition-colors">Sign up free</a>
     </p>
 </div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault(); // Stop browser from navigating
+    
+    // Get form data
+    const formData = new FormData(this);
+    const email = formData.get('email');
+    const password = formData.get('password');
+    
+    // Clear old errors
+    const errorContainer = document.getElementById('error-message') || document.createElement('p');
+    errorContainer.id = 'error-message';
+    errorContainer.className = 'mt-4 text-sm text-center text-red-500';
+    this.appendChild(errorContainer);
+    errorContainer.innerText = 'Logging in...';
+
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            // Display error message
+            errorContainer.innerText = data.message || 'Login failed.';
+            return;
+        }
+
+        // Save token
+        localStorage.setItem('auth_token', data.token);
+        
+        // Redirect based on role
+        if (data.user.role === 'admin') {
+            window.location.href = '/admin/dashboard';
+        } else if (data.user.role === 'restaurant_owner') {
+            window.location.href = '/restaurant/dashboard';
+        } else if (data.user.role === 'rider') {
+            window.location.href = '/rider/dashboard';
+        } else {
+            window.location.href = '/browse';
+        }
+        
+    } catch (error) {
+        errorContainer.innerText = 'An error occurred connecting to the server.';
+    }
+});
+</script>
 @endsection
