@@ -6,7 +6,7 @@
     <h1 class="text-2xl font-display font-bold tracking-tight">Create your account</h1>
     <p class="text-sm text-surface-800/60 mt-2">Start ordering from 500+ restaurants near you.</p>
 
-    <form class="mt-8 space-y-5" method="POST" action="{{ route('register.post') }}">
+    <form id="registerForm" class="mt-8 space-y-5" method="POST" action="/api/register">
         @csrf
         <div>
             <label for="name" class="block text-sm font-medium text-surface-800 mb-1.5">Full name</label>
@@ -91,4 +91,52 @@
         Already have an account? <a href="{{ route('login') }}" class="font-semibold text-brand-600 hover:text-brand-700 transition-colors">Sign in</a>
     </p>
 </div>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const payload = Object.fromEntries(formData.entries());
+    
+    const errorContainer = document.getElementById('error-message') || document.createElement('p');
+    errorContainer.id = 'error-message';
+    errorContainer.className = 'mt-4 text-sm text-center text-red-500';
+    this.appendChild(errorContainer);
+    errorContainer.innerText = 'Creating account...';
+
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            errorContainer.innerText = data.message || Object.values(data.errors || {})[0]?.[0] || 'Registration failed.';
+            return;
+        }
+
+        localStorage.setItem('auth_token', data.token);
+        
+        if (data.user.role === 'admin') {
+            window.location.href = '/admin/dashboard';
+        } else if (data.user.role === 'restaurant_owner') {
+            window.location.href = '/restaurant/dashboard';
+        } else if (data.user.role === 'rider') {
+            window.location.href = '/rider/dashboard';
+        } else {
+            window.location.href = '/browse';
+        }
+        
+    } catch (error) {
+        errorContainer.innerText = 'An error occurred connecting to the server.';
+    }
+});
+</script>
 @endsection
