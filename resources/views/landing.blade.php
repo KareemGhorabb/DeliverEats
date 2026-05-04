@@ -180,25 +180,51 @@
 
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
                 @php
-                $restaurants = [
-                    ['name' => 'Shawarma Station', 'cuisine' => 'Middle Eastern', 'rating' => '4.8', 'time' => '20-30', 'fee' => '2.99', 'gradient' => 'from-amber-400 to-orange-500', 'emoji' => '🌯', 'orders' => '2.4K'],
-                    ['name' => 'Pizza Republic', 'cuisine' => 'Italian', 'rating' => '4.6', 'time' => '25-35', 'fee' => '1.99', 'gradient' => 'from-red-400 to-rose-500', 'emoji' => '🍕', 'orders' => '5.1K'],
-                    ['name' => 'Sushi Zen', 'cuisine' => 'Japanese', 'rating' => '4.9', 'time' => '30-40', 'fee' => '3.99', 'gradient' => 'from-cyan-400 to-blue-500', 'emoji' => '🍣', 'orders' => '1.8K'],
-                    ['name' => 'The Green Bowl', 'cuisine' => 'Health & Bowls', 'rating' => '4.7', 'time' => '15-25', 'fee' => '2.49', 'gradient' => 'from-emerald-400 to-green-500', 'emoji' => '🥗', 'orders' => '3.2K'],
-                    ['name' => 'Burger District', 'cuisine' => 'American', 'rating' => '4.5', 'time' => '20-30', 'fee' => '1.49', 'gradient' => 'from-yellow-400 to-amber-500', 'emoji' => '🍔', 'orders' => '7.8K'],
-                    ['name' => 'Noodle House', 'cuisine' => 'Asian Fusion', 'rating' => '4.7', 'time' => '25-35', 'fee' => '2.99', 'gradient' => 'from-violet-400 to-purple-500', 'emoji' => '🍜', 'orders' => '2.9K'],
-                ];
+                $featuredRestaurants = ($restaurants ?? collect())->take(6)->values()->map(function ($restaurant, $index) {
+                    $gradients = [
+                        'from-amber-400 to-orange-500',
+                        'from-red-400 to-rose-500',
+                        'from-cyan-400 to-blue-500',
+                        'from-emerald-400 to-green-500',
+                        'from-yellow-400 to-amber-500',
+                        'from-violet-400 to-purple-500',
+                    ];
+
+                    return [
+                        'slug' => $restaurant->slug,
+                        'name' => $restaurant->name,
+                        'cuisine' => $restaurant->description ?: 'Restaurant',
+                        'rating' => number_format((float) ($restaurant->avg_rating ?? 0), 1),
+                        'time' => '20-30',
+                        'fee' => number_format((float) ($restaurant->min_order_amount ?? 0), 2),
+                        'logo' => $restaurant->logo,
+                        'gradient' => $gradients[$index % count($gradients)],
+                        'emoji' => '🍽️',
+                        'orders' => (string) ($restaurant->total_reviews ?? 0),
+                    ];
+                });
                 @endphp
 
-                @foreach($restaurants as $r)
-                <a href="{{ route('customer.restaurant', ['slug' => \Illuminate\Support\Str::slug($r['name'])]) }}" class="restaurant-card bg-white rounded-2xl overflow-hidden border border-surface-200/50 group">
+                @foreach($featuredRestaurants as $r)
+                <a href="{{ route('customer.restaurant', ['slug' => $r['slug']]) }}" class="restaurant-card bg-white rounded-2xl overflow-hidden border border-surface-200/50 group">
                     <div class="h-40 bg-gradient-to-br {{ $r['gradient'] }} relative overflow-hidden">
-                        <div class="absolute inset-0 flex items-center justify-center text-6xl opacity-30 group-hover:scale-110 transition-transform duration-500">{{ $r['emoji'] }}</div>
+                        @if(!empty($r['logo']))
+                            <img
+                                src="{{ $r['logo'] }}"
+                                alt="{{ $r['name'] }} logo"
+                                class="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                                loading="lazy"
+                                onerror="this.style.display='none';"
+                            >
+                            <div class="absolute inset-0 bg-gradient-to-t from-surface-900/40 via-surface-900/10 to-transparent"></div>
+                        @else
+                            <div class="absolute inset-0 flex items-center justify-center text-6xl opacity-30 group-hover:scale-110 transition-transform duration-500">{{ $r['emoji'] }}</div>
+                        @endif
                         <div class="absolute top-3 left-3 px-2.5 py-1 bg-white/90 backdrop-blur rounded-lg text-[11px] font-semibold text-surface-900 flex items-center gap-1">
                             <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                             {{ $r['rating'] }}
                         </div>
-                        <div class="absolute top-3 right-3 px-2.5 py-1 bg-white/90 backdrop-blur rounded-lg text-[11px] font-semibold text-surface-900">{{ $r['orders'] }}+ orders</div>
+                        <div class="absolute top-3 right-3 px-2.5 py-1 bg-white/90 backdrop-blur rounded-lg text-[11px] font-semibold text-surface-900">{{ $r['orders'] }} reviews</div>
                     </div>
                     <div class="p-4">
                         <h3 class="text-base font-display font-bold group-hover:text-brand-600 transition-colors">{{ $r['name'] }}</h3>

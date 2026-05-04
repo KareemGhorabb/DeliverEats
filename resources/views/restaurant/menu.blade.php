@@ -13,31 +13,21 @@
 </div>
 
 @php
-$categories = [
-    ['name' => 'Popular', 'items' => [
-        ['name' => 'Classic Chicken Shawarma', 'price' => '6.99', 'available' => true, 'orders' => 142],
-        ['name' => 'Mixed Grill Platter', 'price' => '14.99', 'available' => true, 'orders' => 89],
-        ['name' => 'Chicken Fattoush Bowl', 'price' => '9.49', 'available' => true, 'orders' => 67],
-    ]],
-    ['name' => 'Wraps & Sandwiches', 'items' => [
-        ['name' => 'Beef Shawarma Wrap', 'price' => '7.99', 'available' => true, 'orders' => 95],
-        ['name' => 'Falafel Wrap', 'price' => '5.49', 'available' => true, 'orders' => 73],
-        ['name' => 'Halloumi & Zaatar Wrap', 'price' => '6.49', 'available' => false, 'orders' => 34],
-    ]],
-    ['name' => 'Platters', 'items' => [
-        ['name' => 'Shawarma Platter', 'price' => '11.99', 'available' => true, 'orders' => 56],
-        ['name' => 'Kebab Platter', 'price' => '13.99', 'available' => true, 'orders' => 41],
-    ]],
-    ['name' => 'Sides & Extras', 'items' => [
-        ['name' => 'Hummus', 'price' => '3.99', 'available' => true, 'orders' => 120],
-        ['name' => 'Garlic Fries', 'price' => '3.49', 'available' => true, 'orders' => 98],
-        ['name' => 'Fattoush Salad', 'price' => '4.99', 'available' => true, 'orders' => 45],
-    ]],
-    ['name' => 'Drinks', 'items' => [
-        ['name' => 'Fresh Lemonade w/ Mint', 'price' => '2.99', 'available' => true, 'orders' => 88],
-        ['name' => 'Ayran', 'price' => '1.99', 'available' => true, 'orders' => 52],
-    ]],
-];
+$categories = ($menuCategories ?? collect())->map(function ($category) {
+    return [
+        'id' => $category->id,
+        'name' => $category->name,
+        'items' => $category->menuItems->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'price' => number_format((float) $item->price, 2),
+                'available' => (bool) $item->is_available,
+                'orders' => 0,
+            ];
+        })->values()->all(),
+    ];
+})->values()->all();
 @endphp
 
 <div class="space-y-6">
@@ -67,7 +57,7 @@ $categories = [
                 </div>
                 <p class="text-sm font-bold w-16 text-right">${{ $item['price'] }}</p>
                 {{-- Availability toggle --}}
-                <button class="relative w-10 h-6 rounded-full transition-colors {{ $item['available'] ? 'bg-emerald-500' : 'bg-surface-300' }}" onclick="this.classList.toggle('bg-emerald-500'); this.classList.toggle('bg-surface-300'); this.querySelector('span').classList.toggle('translate-x-4'); this.querySelector('span').classList.toggle('translate-x-0.5')">
+                        <button class="relative w-10 h-6 rounded-full transition-colors {{ $item['available'] ? 'bg-emerald-500' : 'bg-surface-300' }}" onclick="this.classList.toggle('bg-emerald-500'); this.classList.toggle('bg-surface-300'); this.querySelector('span').classList.toggle('translate-x-4'); this.querySelector('span').classList.toggle('translate-x-0.5')">
                     <span class="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform {{ $item['available'] ? 'translate-x-4' : 'translate-x-0.5' }}"></span>
                 </button>
                 <div class="flex items-center gap-1">
@@ -95,7 +85,14 @@ $categories = [
         </div>
         <div class="p-6 space-y-4">
             <div><label class="text-sm font-medium mb-1 block">Item Name</label><input type="text" placeholder="e.g. Chicken Shawarma" class="w-full px-4 py-2.5 rounded-xl bg-surface-50 border border-surface-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"></div>
-            <div><label class="text-sm font-medium mb-1 block">Category</label><select class="w-full px-4 py-2.5 rounded-xl bg-surface-50 border border-surface-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"><option>Popular</option><option>Wraps & Sandwiches</option><option>Platters</option><option>Sides & Extras</option><option>Drinks</option></select></div>
+            <div>
+                <label class="text-sm font-medium mb-1 block">Category</label>
+                <select class="w-full px-4 py-2.5 rounded-xl bg-surface-50 border border-surface-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30">
+                    @foreach($categories as $category)
+                    <option>{{ $category['name'] }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div><label class="text-sm font-medium mb-1 block">Description</label><textarea rows="2" placeholder="Brief description..." class="w-full px-4 py-2.5 rounded-xl bg-surface-50 border border-surface-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 resize-none"></textarea></div>
             <div class="grid grid-cols-2 gap-4">
                 <div><label class="text-sm font-medium mb-1 block">Base Price ($)</label><input type="number" step="0.01" placeholder="0.00" class="w-full px-4 py-2.5 rounded-xl bg-surface-50 border border-surface-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"></div>

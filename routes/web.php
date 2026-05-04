@@ -1,13 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RestaurantPageController;
 
 /*
 |--------------------------------------------------------------------------
 | Public Routes
 |--------------------------------------------------------------------------
 */
-Route::get('/', fn () => view('landing'))->name('home');
+Route::get('/', [RestaurantPageController::class, 'landing'])->name('home');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', fn () => view('auth.login'))->name('login');
@@ -20,8 +21,8 @@ Route::middleware('guest')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('browse')->name('customer.')->group(function () {
-    Route::get('/', fn () => view('customer.home'))->name('home');
-    Route::get('/restaurant/{slug}', fn ($slug) => view('customer.restaurant', ['slug' => $slug]))->name('restaurant');
+    Route::get('/', [RestaurantPageController::class, 'browse'])->name('home');
+    Route::get('/restaurant/{slug}', [RestaurantPageController::class, 'show'])->name('restaurant');
     Route::get('/cart', fn () => view('customer.cart'))->name('cart');
     Route::get('/checkout', fn () => view('customer.checkout'))->name('checkout');
 });
@@ -43,11 +44,33 @@ Route::get('/profile', fn () => view('customer.profile'))->name('customer.profil
 |--------------------------------------------------------------------------
 */
 Route::prefix('restaurant')->name('restaurant.')->group(function () {
-    Route::get('/dashboard', fn () => view('restaurant.dashboard'))->name('dashboard');
-    Route::get('/menu', fn () => view('restaurant.menu'))->name('menu');
-    Route::get('/orders', fn () => view('restaurant.orders'))->name('orders');
-    Route::get('/reviews', fn () => view('restaurant.reviews'))->name('reviews');
-    Route::get('/payouts', fn () => view('restaurant.payouts'))->name('payouts');
+    Route::get('/dashboard', function () {
+        $mock = app(\App\Services\MockDataService::class);
+        return view('restaurant.dashboard', [
+            'pendingOrders' => array_values($mock->pendingOrders()),
+            'weeklyBars'    => [40, 65, 55, 80, 70, 90, 60],
+        ]);
+    })->name('dashboard');
+    Route::get('/menu', [RestaurantPageController::class, 'menu'])->name('menu');
+    Route::get('/orders', function () {
+        $mock = app(\App\Services\MockDataService::class);
+        return view('restaurant.orders', [
+            'activeOrders' => array_values($mock->activeOrders()),
+        ]);
+    })->name('orders');
+    Route::get('/reviews', function () {
+        $mock = app(\App\Services\MockDataService::class);
+        return view('restaurant.reviews', [
+            'reviews' => $mock->orders(), // use orders that are delivered as reviewable
+        ]);
+    })->name('reviews');
+    Route::get('/payouts', function () {
+        $mock = app(\App\Services\MockDataService::class);
+        $delivered = array_filter($mock->orders(), fn($o) => $o['status'] === 'delivered');
+        return view('restaurant.payouts', [
+            'payoutOrders' => array_values($delivered),
+        ]);
+    })->name('payouts');
     Route::get('/settings', fn () => view('restaurant.settings'))->name('settings');
 });
 

@@ -11,15 +11,29 @@
 <div data-tab-panel="active">
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         @php
-        $activeOrders = [
-            ['id' => 'ORD-001', 'customer' => 'Ahmed Hassan', 'items' => ['2× Chicken Shawarma', '1× Garlic Fries'], 'total' => '17.47', 'status' => 'placed', 'label' => 'New Order', 'color' => 'bg-brand-500', 'time' => '2m ago'],
-            ['id' => 'ORD-002', 'customer' => 'Sara Mohamed', 'items' => ['1× Mixed Grill', '1× Ayran'], 'total' => '16.98', 'status' => 'confirmed', 'label' => 'Confirmed', 'color' => 'bg-blue-500', 'time' => '5m ago'],
-            ['id' => 'ORD-003', 'customer' => 'Omar Khalil', 'items' => ['3× Falafel Wrap', '2× Lemonade'], 'total' => '22.45', 'status' => 'preparing', 'label' => 'Preparing', 'color' => 'bg-amber-500', 'time' => '12m ago'],
-            ['id' => 'ORD-004', 'customer' => 'Nour Ali', 'items' => ['1× Shawarma Platter', '1× Hummus'], 'total' => '15.98', 'status' => 'ready', 'label' => 'Ready for Pickup', 'color' => 'bg-emerald-500', 'time' => '18m ago'],
-            ['id' => 'ORD-005', 'customer' => 'Youssef Adel', 'items' => ['2× Kebab Platter'], 'total' => '27.98', 'status' => 'on_the_way', 'label' => 'Out for Delivery', 'color' => 'bg-violet-500', 'time' => '25m ago'],
-        ];
+        $mappedOrders = collect($activeOrders)->map(function ($order) {
+            $statusMap = [
+                'placed'           => ['label' => 'New Order',        'color' => 'bg-brand-500'],
+                'confirmed'        => ['label' => 'Confirmed',         'color' => 'bg-blue-500'],
+                'preparing'        => ['label' => 'Preparing',         'color' => 'bg-amber-500'],
+                'ready_for_pickup' => ['label' => 'Ready for Pickup',  'color' => 'bg-emerald-500'],
+                'picked_up'        => ['label' => 'Out for Delivery',  'color' => 'bg-violet-500'],
+            ];
+            $statusInfo = $statusMap[$order['status']] ?? ['label' => 'Unknown', 'color' => 'bg-surface-300'];
+            $itemsSummary = collect($order['items'])->map(fn($i) => $i['quantity'] . '× Item #' . $i['menu_item_id'])->implode(', ');
+            return [
+                'id'       => 'ORD-' . str_pad($order['id'], 3, '0', STR_PAD_LEFT),
+                'customer' => 'Customer #' . $order['user_id'],
+                'items'    => [$itemsSummary],
+                'total'    => number_format($order['total'], 2),
+                'status'   => $order['status'],
+                'label'    => $statusInfo['label'],
+                'color'    => $statusInfo['color'],
+                'time'     => 'Just now',
+            ];
+        })->values()->all();
         @endphp
-        @foreach($activeOrders as $order)
+        @foreach($mappedOrders as $order)
         <div class="bg-white rounded-2xl border border-surface-200/50 overflow-hidden">
             <div class="px-5 py-3 {{ $order['color'] }} text-white flex items-center justify-between">
                 <span class="text-xs font-bold">{{ $order['label'] }}</span>

@@ -55,13 +55,24 @@
             </div>
             <div class="space-y-3">
                 @php
-                $pending = [
-                    ['id' => 'ORD-001', 'customer' => 'Ahmed H.', 'items' => '2× Chicken Shawarma, 1× Garlic Fries', 'total' => '17.47', 'time' => '2 min ago', 'status' => 'new'],
-                    ['id' => 'ORD-002', 'customer' => 'Sara M.', 'items' => '1× Mixed Grill Platter, 1× Ayran', 'total' => '16.98', 'time' => '5 min ago', 'status' => 'new'],
-                    ['id' => 'ORD-003', 'customer' => 'Omar K.', 'items' => '3× Falafel Wrap, 2× Lemonade', 'total' => '22.45', 'time' => '8 min ago', 'status' => 'preparing'],
-                ];
+                $mappedPending = collect($pendingOrders)->map(function ($order) {
+                    $statusMap = [
+                        'placed' => 'new',
+                        'confirmed' => 'new',
+                        'preparing' => 'preparing'
+                    ];
+                    $itemsSummary = collect($order['items'])->map(fn($i) => $i['quantity'] . '× Item #' . $i['menu_item_id'])->implode(', ');
+                    return [
+                        'id' => 'ORD-' . str_pad($order['id'], 3, '0', STR_PAD_LEFT),
+                        'customer' => 'Customer #' . $order['user_id'],
+                        'items' => $itemsSummary,
+                        'total' => number_format($order['total'], 2),
+                        'time' => 'Just now',
+                        'status' => $statusMap[$order['status']] ?? 'new'
+                    ];
+                })->values()->all();
                 @endphp
-                @foreach($pending as $order)
+                @foreach($mappedPending as $order)
                 <div class="flex items-start gap-4 p-4 rounded-xl border {{ $order['status'] === 'new' ? 'border-brand-200 bg-brand-50/30' : 'border-surface-200/50' }}">
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2">
@@ -93,8 +104,8 @@
         <div class="bg-white rounded-2xl border border-surface-200/50 p-6">
             <h3 class="text-sm font-display font-bold mb-5">This Week's Revenue</h3>
             <div class="flex items-end gap-2 h-40">
-                @php $bars = [40,65,55,80,70,90,60]; $days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; @endphp
-                @foreach($bars as $i => $h)
+                @php $days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; @endphp
+                @foreach($weeklyBars as $i => $h)
                 <div class="flex-1 flex flex-col items-center gap-1">
                     <div class="w-full rounded-lg {{ $i === 5 ? 'bg-gradient-to-t from-brand-500 to-brand-400' : 'bg-surface-200' }} transition-all" style="height: {{ $h }}%"></div>
                     <span class="text-[10px] text-surface-300 font-medium">{{ $days[$i] }}</span>
