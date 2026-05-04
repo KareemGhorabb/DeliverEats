@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Api\MenuItemController;
+use App\Http\Controllers\Api\RestaurantController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -13,6 +15,13 @@ Route::post('/login',[AuthController::class,'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout',[AuthController::class,'logout']);
+
+    // ============================================================
+    // RESTAURANT ROUTES — Owner: Hanaa
+    // ============================================================
+    Route::apiResource('/v1/restaurants', RestaurantController::class);
+    Route::apiResource('/v1/menu-items', MenuItemController::class);
+    Route::patch('/v1/menu-items/{id}/toggle-availability', [MenuItemController::class, 'toggleAvailability']);
 });
 
 Route::middleware('auth:sanctum')->get('/profile', [AuthController::class, 'profile']);

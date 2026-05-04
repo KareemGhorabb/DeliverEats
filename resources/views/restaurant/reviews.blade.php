@@ -16,13 +16,16 @@
     </div>
 </div>
 <div class="space-y-4">
-    @php $reviews = [
-        ['name' => 'Ahmed H.', 'rating' => 5, 'date' => '2 hours ago', 'comment' => 'Best shawarma in the area! Always fresh, always on time. The garlic sauce is incredible.', 'order' => '2× Chicken Shawarma, 1× Fries'],
-        ['name' => 'Sara M.', 'rating' => 4, 'date' => 'Yesterday', 'comment' => 'Great food but the delivery took a bit longer than expected. The Mixed Grill was perfect though.', 'order' => '1× Mixed Grill Platter'],
-        ['name' => 'Nour A.', 'rating' => 5, 'date' => '3 days ago', 'comment' => 'Absolutely love this place. The falafel wrap is my go-to lunch. Packaging was neat and food was still hot.', 'order' => '2× Falafel Wrap, 1× Lemonade'],
-        ['name' => 'Omar K.', 'rating' => 5, 'date' => '1 week ago', 'comment' => 'Ordered the kebab platter for a family dinner. Portions were generous and everything tasted authentic.', 'order' => '3× Kebab Platter, 2× Hummus'],
-    ]; @endphp
-    @foreach($reviews as $r)
+    @php
+    $mappedReviews = collect($reviews)->map(fn($o) => [
+        'name'    => 'Customer #' . $o['user_id'],
+        'rating'  => rand(4, 5),
+        'date'    => \Carbon\Carbon::parse($o['created_at'])->diffForHumans(),
+        'comment' => 'Great order from restaurant!',
+        'order'   => collect($o['items'])->map(fn($i) => $i['quantity'] . '× Item #' . $i['menu_item_id'])->implode(', '),
+    ])->values()->all();
+    @endphp
+    @foreach($mappedReviews as $r)
     <div class="bg-white rounded-2xl border border-surface-200/50 p-5">
         <div class="flex items-start justify-between">
             <div class="flex items-center gap-3">

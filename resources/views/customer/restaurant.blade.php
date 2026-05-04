@@ -1,40 +1,48 @@
 @extends('layouts.app')
-@section('title', 'Shawarma Station — DeliverEats')
+@section('title', (($restaurant->name ?? 'Restaurant') . ' — DeliverEats'))
 @section('hide-footer', true)
 
 @section('content')
 @php
-$restaurant = ['name' => 'Shawarma Station', 'cuisine' => 'Middle Eastern · Grilled · Wraps', 'rating' => '4.8', 'reviews' => '324', 'time' => '20-30', 'fee' => '2.99', 'address' => '45 King Faisal St, Downtown'];
-$menu = [
-    ['cat' => 'Popular', 'items' => [
-        ['id' => 1, 'name' => 'Classic Chicken Shawarma', 'desc' => 'Marinated chicken, garlic sauce, pickles, fries wrapped in saj bread', 'price' => 6.99, 'badge' => 'Bestseller'],
-        ['id' => 2, 'name' => 'Mixed Grill Platter', 'desc' => 'Kebab, kofta, shish tawook with rice, grilled veggies & tahini', 'price' => 14.99, 'badge' => null],
-        ['id' => 3, 'name' => 'Chicken Fattoush Bowl', 'desc' => 'Grilled chicken on fattoush salad with sumac dressing', 'price' => 9.49, 'badge' => 'New'],
-    ]],
-    ['cat' => 'Wraps & Sandwiches', 'items' => [
-        ['id' => 4, 'name' => 'Beef Shawarma Wrap', 'desc' => 'Slow-roasted beef, tahini, onions, tomato in laffa bread', 'price' => 7.99, 'badge' => null],
-        ['id' => 5, 'name' => 'Falafel Wrap', 'desc' => 'Crispy falafel, hummus, salad, pickled turnip', 'price' => 5.49, 'badge' => null],
-        ['id' => 6, 'name' => 'Halloumi & Zaatar Wrap', 'desc' => 'Grilled halloumi, zaatar, tomatoes, mint, olive oil', 'price' => 6.49, 'badge' => null],
-    ]],
-    ['cat' => 'Platters', 'items' => [
-        ['id' => 7, 'name' => 'Shawarma Platter', 'desc' => 'Choice of chicken or beef shawarma with rice, salad & garlic sauce', 'price' => 11.99, 'badge' => null],
-        ['id' => 8, 'name' => 'Kebab Platter', 'desc' => 'Lamb kebab skewers with basmati rice, grilled onion & hummus', 'price' => 13.99, 'badge' => null],
-    ]],
-    ['cat' => 'Sides & Extras', 'items' => [
-        ['id' => 9, 'name' => 'Hummus', 'desc' => 'Classic chickpea hummus with olive oil & pita', 'price' => 3.99, 'badge' => null],
-        ['id' => 10, 'name' => 'Garlic Fries', 'desc' => 'Crispy fries tossed in garlic butter & sumac', 'price' => 3.49, 'badge' => null],
-        ['id' => 11, 'name' => 'Fattoush Salad', 'desc' => 'Mixed greens, radish, crispy pita, pomegranate molasses', 'price' => 4.99, 'badge' => null],
-    ]],
-    ['cat' => 'Drinks', 'items' => [
-        ['id' => 12, 'name' => 'Fresh Lemonade w/ Mint', 'desc' => 'Squeezed lemon, mint leaves, ice', 'price' => 2.99, 'badge' => null],
-        ['id' => 13, 'name' => 'Ayran', 'desc' => 'Traditional yogurt drink, chilled', 'price' => 1.99, 'badge' => null],
-    ]],
+$restaurantData = [
+    'name' => $restaurant->name ?? 'Restaurant',
+    'cuisine' => $restaurant->description ?: 'Restaurant menu',
+    'rating' => number_format((float) ($restaurant->avg_rating ?? 0), 1),
+    'reviews' => (string) ($restaurant->total_reviews ?? 0),
+    'time' => '20-30',
+    'fee' => number_format((float) ($restaurant->min_order_amount ?? 0), 2),
+    'address' => $restaurant->address ?? '',
 ];
+
+$menu = ($menuCategories ?? collect())->map(function ($category) {
+    return [
+        'cat' => $category->name,
+        'items' => $category->menuItems->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'desc' => $item->description,
+                'price' => (float) $item->price,
+                'badge' => null,
+            ];
+        })->values()->all(),
+    ];
+})->values()->all();
 @endphp
 
 {{-- Restaurant header --}}
 <div class="bg-gradient-to-br from-amber-400 to-orange-500 relative">
     <div class="absolute inset-0 flex items-center justify-center text-[12rem] opacity-10">🌯</div>
+    @if(!empty($restaurant->cover_image))
+        <img
+            src="{{ $restaurant->cover_image }}"
+            alt="{{ $restaurantData['name'] }} cover"
+            class="absolute inset-0 w-full h-full object-cover object-center opacity-70"
+            loading="lazy"
+            onerror="this.style.display='none';"
+        >
+        <div class="absolute inset-0 bg-gradient-to-br from-surface-900/50 via-surface-900/30 to-surface-900/10"></div>
+    @endif
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
         <a href="{{ route('customer.home') }}" class="inline-flex items-center gap-2 text-white/80 text-sm hover:text-white transition-colors mb-4">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
@@ -49,28 +57,37 @@ $menu = [
         <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
             <div>
                 <div class="flex items-center gap-3 mb-2">
-                    <h1 class="text-2xl font-display font-bold">{{ $restaurant['name'] }}</h1>
+                    @if(!empty($restaurant->logo))
+                        <img
+                            src="{{ $restaurant->logo }}"
+                            alt="{{ $restaurantData['name'] }} logo"
+                            class="w-12 h-12 rounded-xl object-cover border border-surface-200"
+                            loading="lazy"
+                            onerror="this.style.display='none';"
+                        >
+                    @endif
+                <h1 class="text-2xl font-display font-bold">{{ $restaurantData['name'] }}</h1>
                     <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-full uppercase">Open</span>
                 </div>
-                <p class="text-sm text-surface-300">{{ $restaurant['cuisine'] }}</p>
+                <p class="text-sm text-surface-300">{{ $restaurantData['cuisine'] }}</p>
                 <div class="flex items-center gap-5 mt-3 text-sm text-surface-800/60">
                     <span class="flex items-center gap-1.5">
                         <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                        <span class="font-semibold text-surface-900">{{ $restaurant['rating'] }}</span>
-                        <span>({{ $restaurant['reviews'] }} reviews)</span>
+                        <span class="font-semibold text-surface-900">{{ $restaurantData['rating'] }}</span>
+                        <span>({{ $restaurantData['reviews'] }} reviews)</span>
                     </span>
                     <span class="flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        {{ $restaurant['time'] }} min
+                        {{ $restaurantData['time'] }} min
                     </span>
                     <span class="flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
-                        {{ $restaurant['address'] }}
+                        {{ $restaurantData['address'] }}
                     </span>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <span class="px-3 py-1.5 bg-surface-100 text-surface-800/70 rounded-lg text-xs font-medium">${{ $restaurant['fee'] }} delivery</span>
+                <span class="px-3 py-1.5 bg-surface-100 text-surface-800/70 rounded-lg text-xs font-medium">${{ $restaurantData['fee'] }} delivery</span>
                 <span class="surge-badge px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold">1.3× Surge</span>
             </div>
         </div>
@@ -98,7 +115,7 @@ $menu = [
                 </h2>
                 <div class="space-y-3">
                     @foreach($section['items'] as $item)
-                    <div class="group bg-white rounded-xl border border-surface-200/50 p-4 hover:shadow-lg hover:border-brand-200 transition-all cursor-pointer" onclick="Cart.add({id:{{ $item['id'] }}, name:'{{ $item['name'] }}', price:{{ $item['price'] }}, restaurant:'{{ $restaurant['name'] }}', variantId: null, qty: 1})">
+                    <div class="group bg-white rounded-xl border border-surface-200/50 p-4 hover:shadow-lg hover:border-brand-200 transition-all cursor-pointer" onclick="Cart.add({id:{{ $item['id'] }}, name:'{{ $item['name'] }}', price:{{ $item['price'] }}, restaurant:'{{ $restaurantData['name'] }}', variantId: null, qty: 1})">
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex-1">
                                 <div class="flex items-center gap-2">

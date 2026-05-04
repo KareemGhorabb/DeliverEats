@@ -31,13 +31,19 @@
         <table class="w-full text-sm">
             <thead><tr class="text-left text-xs text-surface-300 uppercase tracking-wider border-b border-surface-100"><th class="px-6 py-3">Date</th><th class="px-6 py-3">Period</th><th class="px-6 py-3">Orders</th><th class="px-6 py-3">Gross</th><th class="px-6 py-3">Commission</th><th class="px-6 py-3">Net Payout</th><th class="px-6 py-3">Status</th></tr></thead>
             <tbody class="divide-y divide-surface-100">
-                @php $payouts = [
-                    ['date' => 'Apr 22', 'period' => 'Apr 15-21', 'orders' => 87, 'gross' => '3,240', 'commission' => '486', 'net' => '2,754', 'status' => 'Paid', 'color' => 'text-emerald-600 bg-emerald-50'],
-                    ['date' => 'Apr 15', 'period' => 'Apr 8-14', 'orders' => 72, 'gross' => '2,890', 'commission' => '434', 'net' => '2,456', 'status' => 'Paid', 'color' => 'text-emerald-600 bg-emerald-50'],
-                    ['date' => 'Apr 8', 'period' => 'Apr 1-7', 'orders' => 65, 'gross' => '2,610', 'commission' => '392', 'net' => '2,218', 'status' => 'Paid', 'color' => 'text-emerald-600 bg-emerald-50'],
-                    ['date' => 'Apr 1', 'period' => 'Mar 25-31', 'orders' => 91, 'gross' => '3,750', 'commission' => '563', 'net' => '3,187', 'status' => 'Paid', 'color' => 'text-emerald-600 bg-emerald-50'],
-                ]; @endphp
-                @foreach($payouts as $p)
+                @php
+                $mappedPayouts = collect($payoutOrders)->map(fn($o) => [
+                    'date'       => \Carbon\Carbon::parse($o['delivered_at'] ?? $o['created_at'])->format('M d'),
+                    'period'     => \Carbon\Carbon::parse($o['created_at'])->format('M d'),
+                    'orders'     => 1,
+                    'gross'      => number_format($o['subtotal'], 2),
+                    'commission' => number_format($o['subtotal'] * 0.15, 2),
+                    'net'        => number_format($o['subtotal'] * 0.85, 2),
+                    'status'     => 'Paid',
+                    'color'      => 'text-emerald-600 bg-emerald-50',
+                ])->values()->all();
+                @endphp
+                @foreach($mappedPayouts as $p)
                 <tr class="hover:bg-surface-50"><td class="px-6 py-4 font-medium">{{ $p['date'] }}</td><td class="px-6 py-4 text-surface-300">{{ $p['period'] }}</td><td class="px-6 py-4">{{ $p['orders'] }}</td><td class="px-6 py-4">${{ $p['gross'] }}</td><td class="px-6 py-4 text-red-500">-${{ $p['commission'] }}</td><td class="px-6 py-4 font-bold">${{ $p['net'] }}</td><td class="px-6 py-4"><span class="px-2.5 py-1 text-[11px] font-bold rounded-full {{ $p['color'] }}">{{ $p['status'] }}</span></td></tr>
                 @endforeach
             </tbody>
