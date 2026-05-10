@@ -13,7 +13,7 @@
 <body class="bg-surface-50 font-body antialiased overflow-x-hidden">
 
     {{-- ── Navbar ──────────────────────────────────────────── --}}
-    <nav class="fixed top-0 inset-x-0 z-50 glass border-b border-white/20">
+    <nav class="fixed top-0 inset-x-0 z-50 bg-white border-b border-surface-200/50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <a href="{{ route('home') }}" class="flex items-center gap-2.5">
@@ -253,7 +253,7 @@
                     <p class="text-sm text-surface-300 mt-2">Restaurant Partners</p>
                 </div>
                 <div class="text-center">
-                    <p class="text-4xl lg:text-5xl font-display font-extrabold text-white stat-number" data-count-to="50" data-duration="1200">0</p>
+                    <p class="text-4xl lg:text-5xl font-display font-extrabold text-black stat-number" data-count-to="50" data-duration="1200">0</p>
                     <p class="text-sm text-surface-300 mt-2">Cities Covered</p>
                 </div>
                 <div class="text-center">

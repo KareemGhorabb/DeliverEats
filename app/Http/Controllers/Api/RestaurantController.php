@@ -24,9 +24,12 @@ class RestaurantController extends Controller
         ]);
     }
 
-    public function show(int $id)
+    public function show(Request $request, int $id)
     {
-        $restaurant = $this->restaurantService->getRestaurantMenu($id);
+        $user = $request->user();
+        $isOwner = $user && ($user->isAdmin() || $user->restaurantsOwned()->where('id', $id)->exists());
+        
+        $restaurant = $this->restaurantService->getRestaurantMenu($id, $isOwner);
 
         return response()->json([
             'success' => true,
@@ -42,13 +45,13 @@ class RestaurantController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:restaurants,slug'],
             'address' => ['required', 'string'],
-            'phone' => ['required', 'string', 'max:20'],
+            'latitude' => ['required', 'numeric'],
+            'longitude' => ['required', 'numeric'],
             'delivery_fee' => ['required', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],
+            'category' => ['nullable', 'string', 'max:255'],
+            'is_active' => ['sometimes', 'boolean'],
         ]);
-
-        $validatedData['min_order_amount'] = $validatedData['delivery_fee'];
-        unset($validatedData['delivery_fee']);
 
         $restaurant = $this->restaurantService->createRestaurant($validatedData);
 
@@ -70,19 +73,24 @@ class RestaurantController extends Controller
             ], 404);
         }
 
+        if (! $request->user()->isAdmin() && $restaurant->user_id !== $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized.',
+            ], 403);
+        }
+
         $validatedData = $request->validate([
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'slug' => ['sometimes', 'required', 'string', 'max:255', 'unique:restaurants,slug,' . $restaurant->id],
             'address' => ['sometimes', 'required', 'string'],
-            'phone' => ['sometimes', 'required', 'string', 'max:20'],
+            'latitude' => ['sometimes', 'required', 'numeric'],
+            'longitude' => ['sometimes', 'required', 'numeric'],
             'delivery_fee' => ['sometimes', 'required', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],
+            'category' => ['nullable', 'string', 'max:255'],
+            'is_active' => ['sometimes', 'boolean'],
         ]);
-
-        if (array_key_exists('delivery_fee', $validatedData)) {
-            $validatedData['min_order_amount'] = $validatedData['delivery_fee'];
-            unset($validatedData['delivery_fee']);
-        }
 
         $restaurant = $this->restaurantService->updateRestaurant($restaurant, $validatedData);
 
@@ -102,6 +110,13 @@ class RestaurantController extends Controller
                 'message' => 'Restaurant not found.',
                 'errors' => ['restaurant_not_found'],
             ], 404);
+        }
+
+        if (! request()->user()->isAdmin() && $restaurant->user_id !== request()->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized.',
+            ], 403);
         }
 
         $this->restaurantService->deleteRestaurant($restaurant);

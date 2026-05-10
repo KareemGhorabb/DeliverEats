@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\MenuItem;
 use App\Models\Restaurant;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Schema;
 
 class RestaurantService
 {
@@ -17,16 +16,38 @@ class RestaurantService
             ->get();
     }
 
-    public function getRestaurantMenu(int $restaurantId): Restaurant
+    public function getRestaurantMenu(int $restaurantId, bool $fullMenu = false): Restaurant
     {
-        return Restaurant::query()
-            ->with(['menuCategories.menuItems.itemVariants'])
-            ->findOrFail($restaurantId);
+        $query = Restaurant::query();
+
+        if ($fullMenu) {
+            $query->with(['menuCategories.menuItems.itemVariants']);
+        } else {
+            $query->with(['menuCategories' => function ($query) {
+                $query->where('is_active', true)->with(['menuItems' => function ($q) {
+                    $q->where('is_available', true)->with('itemVariants');
+                }]);
+            }]);
+        }
+
+        return $query->findOrFail($restaurantId);
     }
 
     public function createRestaurant(array $data): Restaurant
     {
-        return Restaurant::query()->create($data);
+        $restaurant = Restaurant::query()->create($data);
+        
+        // Create default categories for the new restaurant
+        $defaultCategories = ['Mains', 'Sides', 'Drinks'];
+        foreach ($defaultCategories as $index => $categoryName) {
+            $restaurant->menuCategories()->create([
+                'name' => $categoryName,
+                'sort_order' => $index,
+                'is_active' => true,
+            ]);
+        }
+        
+        return $restaurant->load('menuCategories');
     }
 
     public function updateRestaurant(Restaurant $restaurant, array $data): Restaurant
@@ -43,23 +64,11 @@ class RestaurantService
 
     public function createMenuItem(array $data): MenuItem
     {
-        if (! Schema::hasColumn('menu_items', 'restaurant_id')) {
-            unset($data['restaurant_id']);
-        }
-
-        $menuItem = new MenuItem();
-        $menuItem->fill($data);
-        $menuItem->save();
-
-        return $menuItem->refresh();
+        return MenuItem::create($data);
     }
 
     public function updateMenuItem(MenuItem $menuItem, array $data): MenuItem
     {
-        if (! Schema::hasColumn('menu_items', 'restaurant_id')) {
-            unset($data['restaurant_id']);
-        }
-
         $menuItem->update($data);
 
         return $menuItem->refresh();

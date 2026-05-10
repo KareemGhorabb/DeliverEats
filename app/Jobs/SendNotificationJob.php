@@ -2,6 +2,8 @@
 
 namespace App\Jobs;
 
+use App\Contracts\NotificationServiceInterface;
+use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -9,19 +11,23 @@ class SendNotificationJob implements ShouldQueue
 {
     use Queueable;
 
-    /**
-     * Create a new job instance.
-     */
-    public function __construct()
-    {
-        //
+    public function __construct(
+        public readonly int $userId,
+        public readonly string $title,
+        public readonly string $body,
+        public readonly array $data = [],
+    ) {
+        $this->onQueue('notifications');
     }
 
-    /**
-     * Execute the job.
-     */
-    public function handle(): void
+    public function handle(NotificationServiceInterface $notifications): void
     {
-        //
+        $user = User::find($this->userId);
+
+        if (! $user) {
+            return;
+        }
+
+        $notifications->sendPush($user, $this->title, $this->body, $this->data);
     }
 }

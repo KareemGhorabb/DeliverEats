@@ -1,112 +1,167 @@
 @extends('layouts.admin')
-@section('page-title', 'Control Tower')
+@section('page-title', 'Control Tower — Live Dispatch')
 @section('content')
-<div class="grid lg:grid-cols-4 gap-6">
-    {{-- Map --}}
-    <div class="lg:col-span-3">
-        <div class="map-container h-[500px] lg:h-[600px] relative" id="control-tower-map">
-            <div class="absolute top-4 left-4 z-[1000] glass-dark rounded-xl px-4 py-3">
-                <div class="flex items-center gap-4 text-xs">
-                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-brand-500"></span><span class="text-surface-200">Restaurants (12)</span></div>
-                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span class="text-surface-200">Riders (8)</span></div>
-                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-500"></span><span class="text-surface-200">Active Orders (14)</span></div>
+
+<div class="grid lg:grid-cols-4 gap-6 h-[calc(100vh-160px)]">
+    {{-- Sidebar: Active Stats & List --}}
+    <div class="lg:col-span-1 space-y-6 flex flex-col overflow-hidden">
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white dark:bg-white/5 border border-surface-200 dark:border-white/10 p-4 rounded-2xl shadow-sm">
+                <p class="text-[10px] text-surface-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">Active Orders</p>
+                <p class="text-2xl font-display font-bold text-surface-900 dark:text-white" id="stat-active-count">0</p>
+            </div>
+            <div class="bg-white dark:bg-white/5 border border-surface-200 dark:border-white/10 p-4 rounded-2xl shadow-sm">
+                <p class="text-[10px] text-surface-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">Riders Online</p>
+                <p class="text-2xl font-display font-bold text-emerald-500" id="stat-riders-count">0</p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-white/5 border border-surface-200 dark:border-white/10 rounded-2xl shadow-sm flex-1 flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-surface-100 dark:border-white/5 flex items-center justify-between">
+                <h3 class="text-sm font-bold text-surface-900 dark:text-white">Active Dispatch</h3>
+                <span class="flex h-2 w-2 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+            </div>
+            <div id="active-orders-list" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                {{-- Populated via JS --}}
+                <div class="animate-pulse space-y-3">
+                    <div class="h-20 bg-surface-50 dark:bg-white/5 rounded-xl"></div>
+                    <div class="h-20 bg-surface-50 dark:bg-white/5 rounded-xl"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Sidebar --}}
-    <div class="space-y-4">
-        <div class="bg-surface-900 rounded-2xl border border-white/5 p-5">
-            <h3 class="text-sm font-display font-bold mb-3 flex items-center gap-2">Active Orders <span class="px-1.5 py-0.5 bg-brand-500/20 text-brand-400 text-[10px] font-bold rounded-full">14</span></h3>
-            <div class="space-y-2 max-h-64 overflow-y-auto">
-                @php $mapOrders = [
-                    ['id' => 'ORD-284', 'from' => 'Pizza Republic', 'to' => 'Youssef A.', 'rider' => 'Pending', 'status' => 'placed'],
-                    ['id' => 'ORD-283', 'from' => 'Sushi Zen', 'to' => 'Nour M.', 'rider' => 'Ali S.', 'status' => 'confirmed'],
-                    ['id' => 'ORD-282', 'from' => 'Shawarma Station', 'to' => 'Ahmed H.', 'rider' => 'Mohamed A.', 'status' => 'on_the_way'],
-                    ['id' => 'ORD-281', 'from' => 'Burger District', 'to' => 'Sara K.', 'rider' => 'Hassan M.', 'status' => 'on_the_way'],
-                    ['id' => 'ORD-280', 'from' => 'Green Bowl', 'to' => 'Omar N.', 'rider' => 'Karim R.', 'status' => 'preparing'],
-                ]; @endphp
-                @foreach($mapOrders as $o)
-                <div class="p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer transition-colors">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold">{{ $o['id'] }}</span>
-                        @php $colors = ['placed' => 'text-brand-400', 'confirmed' => 'text-blue-400', 'preparing' => 'text-amber-400', 'on_the_way' => 'text-violet-400']; @endphp
-                        <span class="text-[10px] {{ $colors[$o['status']] ?? 'text-surface-300' }} font-semibold uppercase">{{ str_replace('_', ' ', $o['status']) }}</span>
-                    </div>
-                    <p class="text-[11px] text-surface-300 mt-1">{{ $o['from'] }} → {{ $o['to'] }}</p>
-                    <p class="text-[10px] text-surface-300 mt-0.5">🛵 {{ $o['rider'] }}</p>
-                </div>
-                @endforeach
-            </div>
+    {{-- Main: Live Map --}}
+    <div class="lg:col-span-3 relative bg-white dark:bg-neutral-900 border border-surface-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-xl" style="min-height: 500px;">
+        <div id="dispatch-map" class="absolute inset-0 w-full h-full z-0" style="width: 100%; height: 100%;"></div>
+        
+        {{-- Map Overlay Controls --}}
+        <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
+            <button onclick="centerMap()" class="p-3 bg-white dark:bg-neutral-800 text-surface-700 dark:text-white rounded-xl shadow-lg border border-surface-200 dark:border-white/10 hover:bg-surface-50 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </button>
         </div>
 
-        <div class="bg-surface-900 rounded-2xl border border-white/5 p-5">
-            <h3 class="text-sm font-display font-bold mb-3">Rider Fleet</h3>
-            <div class="space-y-2">
-                @php $riders = [
-                    ['name' => 'Mohamed Ali', 'status' => 'delivering', 'color' => 'bg-violet-400'],
-                    ['name' => 'Hassan Magdy', 'status' => 'delivering', 'color' => 'bg-violet-400'],
-                    ['name' => 'Ali Saeed', 'status' => 'available', 'color' => 'bg-emerald-400'],
-                    ['name' => 'Karim Rashad', 'status' => 'delivering', 'color' => 'bg-violet-400'],
-                    ['name' => 'Tarek Ibrahim', 'status' => 'available', 'color' => 'bg-emerald-400'],
-                    ['name' => 'Amr Fawzy', 'status' => 'offline', 'color' => 'bg-surface-300/50'],
-                ]; @endphp
-                @foreach($riders as $r)
-                <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/[0.03] transition-colors">
-                    <div class="w-2 h-2 rounded-full {{ $r['color'] }}"></div>
-                    <span class="text-xs flex-1">{{ $r['name'] }}</span>
-                    <span class="text-[10px] text-surface-300 capitalize">{{ $r['status'] }}</span>
-                </div>
-                @endforeach
-            </div>
-        </div>
-
-        <div class="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-5">
-            <h3 class="text-sm font-semibold text-amber-400 mb-2 flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-                Surge Active
-            </h3>
-            <p class="text-xs text-surface-300 mb-2">3 zones with elevated demand</p>
-            <div class="space-y-1 text-xs">
-                <div class="flex justify-between"><span class="text-surface-200">Downtown</span><span class="text-amber-400 font-bold">1.5×</span></div>
-                <div class="flex justify-between"><span class="text-surface-200">Zamalek</span><span class="text-amber-400 font-bold">1.3×</span></div>
-                <div class="flex justify-between"><span class="text-surface-200">Heliopolis</span><span class="text-amber-400 font-bold">1.2×</span></div>
-            </div>
+        <div class="absolute bottom-6 left-6 z-10 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-md border border-surface-200 dark:border-white/10 p-3 rounded-2xl shadow-2xl flex gap-6 text-[10px] font-bold uppercase tracking-widest text-surface-500 dark:text-gray-400">
+            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-brand-500 shadow-lg shadow-brand-500/50"></span> Active Order</div>
+            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></span> Online Rider</div>
+            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50"></span> Restaurant</div>
         </div>
     </div>
 </div>
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const mapEl = document.getElementById('control-tower-map');
-    if (typeof L !== 'undefined' && mapEl) {
-        mapEl.innerHTML = '';
-        const legend = mapEl.querySelector('.glass-dark');
-        const map = L.map('control-tower-map', { zoomControl: false }).setView([30.0444, 31.2357], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '' }).addTo(map);
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
+    let map;
+    let markers = { orders: [], riders: [], restaurants: [] };
+    const token = localStorage.getItem('auth_token');
+    const headers = { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` };
 
-        // Restaurants
-        const restaurants = [[30.0480,31.2400],[30.0520,31.2300],[30.0400,31.2250],[30.0350,31.2450],[30.0560,31.2380],[30.0420,31.2500],[30.0300,31.2350],[30.0470,31.2200]];
-        restaurants.forEach(pos => {
-            const icon = L.divIcon({ className: '', html: '<div style="background:#F26522;width:16px;height:16px;border-radius:6px;border:2px solid rgba(242,101,34,0.3);box-shadow:0 0 8px rgba(242,101,34,0.4)"></div>', iconSize: [16,16] });
-            L.marker(pos, { icon }).addTo(map);
+    function initMap() {
+        const cairo = { lat: 30.0444, lng: 31.2357 };
+        map = new google.maps.Map(document.getElementById("dispatch-map"), {
+            center: cairo,
+            zoom: 13,
+            disableDefaultUI: true,
+            styles: document.documentElement.classList.contains('dark') ? [
+                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+                { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
+            ] : []
         });
-
-        // Riders
-        const riderPositions = [[30.0450,31.2370],[30.0430,31.2290],[30.0500,31.2420],[30.0380,31.2340],[30.0540,31.2350],[30.0460,31.2440],[30.0410,31.2380],[30.0350,31.2410]];
-        riderPositions.forEach(pos => {
-            const icon = L.divIcon({ className: '', html: '<div style="background:#10B981;width:14px;height:14px;border-radius:50%;border:2px solid rgba(16,185,129,0.3);box-shadow:0 0 10px rgba(16,185,129,0.5)"></div>', iconSize: [14,14] });
-            L.marker(pos, { icon }).addTo(map);
-        });
-
-        // Surge zones
-        L.circle([30.0444, 31.2357], { radius: 1200, color: '#F59E0B', fillColor: '#F59E0B', fillOpacity: 0.08, weight: 1 }).addTo(map);
-        L.circle([30.0600, 31.2200], { radius: 800, color: '#F59E0B', fillColor: '#F59E0B', fillOpacity: 0.06, weight: 1 }).addTo(map);
+        
+        loadData();
+        setInterval(loadData, 10000); // Polling every 10s
     }
-});
+
+    async function loadData() {
+        try {
+            const res = await fetch('/api/admin/control-tower', { headers });
+            const json = await res.json();
+            if (json.success) {
+                renderList(json.data.active_orders);
+                updateMarkers(json.data.active_orders);
+                document.getElementById('stat-active-count').textContent = json.data.active_orders.length;
+                // For riders count, we'll extract unique online riders from orders or add an online riders API
+                const uniqueRiders = [...new Set(json.data.active_orders.filter(o => o.rider).map(o => o.rider.id))];
+                document.getElementById('stat-riders-count').textContent = uniqueRiders.length;
+            }
+        } catch (e) { console.error('Tower sync failed', e); }
+    }
+
+    function renderList(orders) {
+        const list = document.getElementById('active-orders-list');
+        if (orders.length === 0) {
+            list.innerHTML = '<p class="text-center py-10 text-xs text-surface-400">No active dispatch</p>';
+            return;
+        }
+        list.innerHTML = orders.map(o => `
+            <div class="p-3 rounded-xl border border-surface-100 dark:border-white/5 bg-surface-50/50 dark:bg-white/5 hover:border-brand-200 dark:hover:border-brand-500/30 transition-all group cursor-pointer" onclick="focusOnOrder(${o.id})">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-bold text-brand-600 dark:text-brand-400">#ORD-${o.id}</span>
+                    <span class="px-1.5 py-0.5 bg-white dark:bg-neutral-800 text-[9px] font-black rounded border border-surface-200 dark:border-white/10 uppercase">${o.status.replace(/_/g, ' ')}</span>
+                </div>
+                <p class="text-xs font-bold text-surface-900 dark:text-white truncate">${o.restaurant?.name || 'Restaurant'}</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <div class="w-1 h-1 rounded-full bg-surface-300"></div>
+                    <p class="text-[10px] text-surface-500 dark:text-gray-400 truncate">Rider: ${o.rider?.name || 'Unassigned'}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function updateMarkers(orders) {
+        // Clear old markers
+        markers.orders.forEach(m => m.setMap(null));
+        markers.riders.forEach(m => m.setMap(null));
+        markers.orders = []; markers.riders = [];
+
+        orders.forEach(o => {
+            // Order (Customer) Marker
+            if (o.delivery_lat) {
+                const m = new google.maps.Marker({
+                    position: { lat: parseFloat(o.delivery_lat), lng: parseFloat(o.delivery_lng) },
+                    map,
+                    icon: { url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png', scaledSize: new google.maps.Size(32, 32) },
+                    title: `Order #${o.id}`
+                });
+                markers.orders.push(m);
+            }
+            
+            // Rider Marker
+            if (o.rider && o.rider.rider_location) {
+                const loc = o.rider.rider_location;
+                const m = new google.maps.Marker({
+                    position: { lat: parseFloat(loc.latitude), lng: parseFloat(loc.longitude) },
+                    map,
+                    icon: { url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png', scaledSize: new google.maps.Size(40, 40) },
+                    title: `Rider: ${o.rider.name}`
+                });
+                markers.riders.push(m);
+            }
+            
+            // Restaurant Marker
+            if (o.restaurant) {
+                const m = new google.maps.Marker({
+                    position: { lat: parseFloat(o.restaurant.latitude), lng: parseFloat(o.restaurant.longitude) },
+                    map,
+                    icon: { url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', scaledSize: new google.maps.Size(32, 32) },
+                    title: o.restaurant.name
+                });
+                markers.restaurants.push(m);
+            }
+        });
+    }
+
+    window.focusOnOrder = (id) => { /* logic to pan map to specific order */ };
+    window.centerMap = () => { map.setCenter({ lat: 30.0444, lng: 31.2357 }); map.setZoom(13); };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof google !== 'undefined') initMap();
+    });
 </script>
 @endpush
 @endsection

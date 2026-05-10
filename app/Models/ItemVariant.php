@@ -15,9 +15,8 @@ class ItemVariant extends Model
     ];
 
     protected $casts = [
-        'additional_price' => 'float',
         'price_modifier' => 'float',
-        'is_available' => 'boolean',
+        'is_available'   => 'boolean',
     ];
 
     public function menuItem(): BelongsTo

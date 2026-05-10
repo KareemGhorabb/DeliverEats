@@ -37,6 +37,13 @@ class MenuItemController extends Controller
             ], 422);
         }
 
+        if (! $request->user()->isAdmin() && ! $request->user()->restaurantsOwned()->where('id', $validatedData['restaurant_id'])->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized.',
+            ], 403);
+        }
+
         $menuItem = $this->restaurantService->createMenuItem($validatedData);
 
         return response()->json([
@@ -110,6 +117,13 @@ class MenuItemController extends Controller
             ], 422);
         }
 
+        if (! $request->user()->isAdmin() && ! $request->user()->restaurantsOwned()->where('id', $selectedRestaurantId)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized.',
+            ], 403);
+        }
+
         $menuItem = $this->restaurantService->updateMenuItem($menuItem, $validatedData);
 
         return response()->json([
@@ -130,6 +144,10 @@ class MenuItemController extends Controller
             ], 404);
         }
 
+        if (! request()->user()->isAdmin() && ! request()->user()->restaurantsOwned()->where('id', $menuItem->restaurant_id)->exists()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $menuItem->delete();
 
         return response()->json([
@@ -148,6 +166,10 @@ class MenuItemController extends Controller
                 'message' => 'Menu item not found.',
                 'errors' => ['menu_item_not_found'],
             ], 404);
+        }
+
+        if (! request()->user()->isAdmin() && ! request()->user()->restaurantsOwned()->where('id', $menuItem->restaurant_id)->exists()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
         $menuItem = $this->restaurantService->toggleItemAvailability($menuItem);

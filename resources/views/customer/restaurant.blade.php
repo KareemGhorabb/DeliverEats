@@ -87,7 +87,7 @@ $menu = ($menuCategories ?? collect())->map(function ($category) {
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <span class="px-3 py-1.5 bg-surface-100 text-surface-800/70 rounded-lg text-xs font-medium">${{ $restaurantData['fee'] }} delivery</span>
+                <span class="px-3 py-1.5 bg-surface-100 text-surface-800/70 rounded-lg text-xs font-medium">EGP {{ $restaurantData['fee'] }} delivery</span>
                 <span class="surge-badge px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold">1.3× Surge</span>
             </div>
         </div>
@@ -115,7 +115,7 @@ $menu = ($menuCategories ?? collect())->map(function ($category) {
                 </h2>
                 <div class="space-y-3">
                     @foreach($section['items'] as $item)
-                    <div class="group bg-white rounded-xl border border-surface-200/50 p-4 hover:shadow-lg hover:border-brand-200 transition-all cursor-pointer" onclick="Cart.add({id:{{ $item['id'] }}, name:'{{ $item['name'] }}', price:{{ $item['price'] }}, restaurant:'{{ $restaurantData['name'] }}', variantId: null, qty: 1})">
+                    <div class="group bg-white rounded-xl border border-surface-200/50 p-4 hover:shadow-lg hover:border-brand-200 transition-all cursor-pointer" onclick="Cart.add({id:{{ $item['id'] }}, name:'{{ $item['name'] }}', price:{{ $item['price'] }}, restaurant_id: {{ $restaurant->id ?? 1 }}, restaurant:'{{ $restaurantData['name'] }}', variantId: null, qty: 1})">
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex-1">
                                 <div class="flex items-center gap-2">
@@ -125,7 +125,7 @@ $menu = ($menuCategories ?? collect())->map(function ($category) {
                                     @endif
                                 </div>
                                 <p class="text-xs text-surface-300 mt-1 leading-relaxed">{{ $item['desc'] }}</p>
-                                <p class="text-sm font-bold text-surface-900 mt-2">${{ number_format($item['price'], 2) }}</p>
+                                <p class="text-sm font-bold text-surface-900 mt-2">EGP {{ number_format($item['price'], 2) }}</p>
                             </div>
                             <button class="mt-1 w-9 h-9 rounded-xl bg-surface-100 group-hover:bg-brand-500 group-hover:text-white text-surface-800/40 flex items-center justify-center transition-all flex-shrink-0">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -147,7 +147,7 @@ $menu = ($menuCategories ?? collect())->map(function ($category) {
             <span class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-xs font-bold" data-cart-count>0</span>
             <span class="text-sm font-semibold">View Cart</span>
         </span>
-        <span class="text-sm font-bold">$<span data-cart-subtotal>0.00</span></span>
+        <span class="text-sm font-bold">EGP <span data-cart-subtotal>0.00</span></span>
     </a>
 </div>
 @endsection

@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Services\SurgeService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -9,19 +10,14 @@ class RecalculateSurgeJob implements ShouldQueue
 {
     use Queueable;
 
-    /**
-     * Create a new job instance.
-     */
-    public function __construct()
-    {
-        //
+    public function __construct(
+        public readonly int $restaurantId,
+    ) {
+        $this->onQueue('surge');
     }
 
-    /**
-     * Execute the job.
-     */
-    public function handle(): void
+    public function handle(SurgeService $surgeService): void
     {
-        //
+        $surgeService->recalculate($this->restaurantId);
     }
 }

@@ -40,13 +40,20 @@ class RestaurantPageController extends Controller
         ]);
     }
 
-    public function menu()
+    public function menu(\Illuminate\Http\Request $request)
     {
-        $restaurant = $this->restaurantService->getAllRestaurants()->first();
+        $user = $request->user();
+        $restaurant = $user?->restaurantsOwned()->first();
+        
+        $menuCategories = collect();
+        if ($restaurant) {
+            $restaurantWithMenu = $this->restaurantService->getRestaurantMenu($restaurant->id);
+            $menuCategories = $restaurantWithMenu->menuCategories;
+        }
 
         return view('restaurant.menu', [
+            'menuCategories' => $menuCategories,
             'restaurant' => $restaurant,
-            'menuCategories' => $restaurant?->menuCategories()->with('menuItems')->get() ?? collect(),
         ]);
     }
 }
