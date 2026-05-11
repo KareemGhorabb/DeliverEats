@@ -146,8 +146,8 @@
 
             grid.innerHTML = restaurants.map(r => `
                 <div class="bg-white dark:bg-white/5 rounded-2xl border border-surface-200 dark:border-white/10 overflow-hidden shadow-sm hover:shadow-md transition-all group">
-                    <div class="h-24 bg-surface-50 dark:bg-white/5 relative flex items-center justify-center text-4xl opacity-20 group-hover:opacity-40 transition-opacity">🏪</div>
-                    <div class="p-5">
+                    <div class="h-24 bg-surface-50 bg-black relative flex items-center justify-center text-4xl opacity-20 group-hover:opacity-40 transition-opacity">🏪</div>
+                    <div class="p-5 bg-black">
                         <div class="flex items-start justify-between mb-3">
                             <div class="min-w-0 pr-2">
                                 <h3 class="text-sm font-bold text-surface-900 dark:text-white truncate">${r.name}</h3>

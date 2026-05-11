@@ -10,14 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script>
-        // Dark Mode Initialization
-        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    </script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    @livewireStyles
 </head>
 <body class="min-h-screen bg-surface-50 dark:bg-neutral-950 font-body text-surface-900 dark:text-gray-100 antialiased transition-colors duration-300">
 
@@ -41,11 +35,7 @@
 
                 {{-- Right side --}}
                 <div class="flex items-center gap-3">
-                    {{-- Dark Mode Toggle --}}
-                    <button onclick="toggleDarkMode()" class="p-2 rounded-xl bg-surface-100 dark:bg-white/5 hover:bg-surface-200 dark:hover:bg-white/10 transition-all group">
-                        <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-surface-600 group-hover:text-brand-600" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-                        <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-amber-400 group-hover:text-amber-300" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
-                    </button>
+
 
                     {{-- Cart --}}
                     <a href="{{ route('customer.cart') }}" class="relative p-2 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-colors group">
@@ -241,34 +231,9 @@
         @if(session('success')) window.Toast.show('Success', "{{ session('success') }}", 'success'); @endif
         @if(session('error')) window.Toast.show('Error', "{{ session('error') }}", 'error'); @endif
 
-        // Dark Mode Toggle
-        function toggleDarkMode() {
-            const html = document.documentElement;
-            if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                localStorage.setItem('color-theme', 'light');
-            } else {
-                html.classList.add('dark');
-                localStorage.setItem('color-theme', 'dark');
-            }
-            updateThemeIcons();
-        }
 
-        function updateThemeIcons() {
-            const darkIcon = document.getElementById('theme-toggle-dark-icon');
-            const lightIcon = document.getElementById('theme-toggle-light-icon');
-            if (!darkIcon || !lightIcon) return;
-            if (document.documentElement.classList.contains('dark')) {
-                darkIcon.classList.add('hidden');
-                lightIcon.classList.remove('hidden');
-            } else {
-                darkIcon.classList.remove('hidden');
-                lightIcon.classList.add('hidden');
-            }
-        }
 
         document.addEventListener('DOMContentLoaded', () => {
-            updateThemeIcons();
             
             // Dropdown Logic
             const dropdownBtn = document.getElementById('user-dropdown-btn');
@@ -305,5 +270,12 @@
         });
     </script>
     @stack('scripts')
+    @livewireScripts
+    <script>
+        function initGoogleMaps() {
+            window.dispatchEvent(new Event('google-maps-loaded'));
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_key') }}&callback=initGoogleMaps&libraries=places&v=weekly" defer></script>
 </body>
 </html>

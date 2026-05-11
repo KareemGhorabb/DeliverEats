@@ -10,15 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
-    <script>
-        // Dark Mode Initialization (Default to Dark)
-        if (localStorage.getItem('color-theme') === 'light') {
-            document.documentElement.classList.remove('dark');
-        } else {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
+    @livewireStyles
 </head>
 <body class="min-h-screen bg-surface-50 dark:bg-neutral-950 font-body text-surface-900 dark:text-gray-100 antialiased transition-colors duration-300">
     <div class="flex min-h-screen">
@@ -66,9 +58,12 @@
 
             <div class="p-4 border-t border-surface-100 dark:border-white/5">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-xs font-bold uppercase">{{ substr(auth()->user()->name, 0, 1) }}</div>
+                    @php
+                        $restName = auth()->user()->restaurantsOwned()->first()?->name ?? auth()->user()->name;
+                    @endphp
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-xs font-bold uppercase">{{ substr($restName, 0, 1) }}</div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-surface-900 dark:text-white truncate">{{ auth()->user()->name }}</p>
+                        <p class="text-sm font-semibold text-surface-900 dark:text-white truncate" id="sidebar-rest-name">{{ $restName }}</p>
                         <p class="text-[11px] text-emerald-600 dark:text-emerald-500 font-medium flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online
                         </p>
@@ -87,11 +82,7 @@
                     <h1 class="text-lg font-display font-bold text-surface-900 dark:text-white">@yield('page-title', 'Dashboard')</h1>
                 </div>
                 <div class="flex items-center gap-3">
-                    {{-- Dark Mode Toggle --}}
-                    <button onclick="toggleDarkMode()" class="p-2 rounded-xl bg-surface-100 dark:bg-white/5 hover:bg-surface-200 dark:hover:bg-white/10 transition-all group">
-                        <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-surface-600 group-hover:text-brand-600" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-                        <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-amber-400 group-hover:text-amber-300" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
-                    </button>
+
 
                     {{-- Profile Dropdown --}}
                     <div class="relative ml-2">
@@ -130,25 +121,7 @@
         @if(session('success')) window.Toast.show('Success', "{{ session('success') }}", 'success'); @endif
         @if(session('error')) window.Toast.show('Error', "{{ session('error') }}", 'error'); @endif
 
-        function toggleDarkMode() {
-            if (document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark'); localStorage.setItem('color-theme', 'light');
-            } else {
-                document.documentElement.classList.add('dark'); localStorage.setItem('color-theme', 'dark');
-            }
-            updateThemeIcons();
-        }
-
-        function updateThemeIcons() {
-            const darkIcon = document.getElementById('theme-toggle-dark-icon');
-            const lightIcon = document.getElementById('theme-toggle-light-icon');
-            if (!darkIcon || !lightIcon) return;
-            if (document.documentElement.classList.contains('dark')) { darkIcon.classList.add('hidden'); lightIcon.classList.remove('hidden'); } 
-            else { darkIcon.classList.remove('hidden'); lightIcon.classList.add('hidden'); }
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
-            updateThemeIcons();
             const profileBtn = document.getElementById('rest-profile-btn');
             const profileMenu = document.getElementById('rest-profile-menu');
             if (profileBtn && profileMenu) {
@@ -158,5 +131,6 @@
         });
     </script>
     @stack('scripts')
+    @livewireScripts
 </body>
 </html>

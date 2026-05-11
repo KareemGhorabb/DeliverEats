@@ -10,15 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
-    <script>
-        // Dark Mode Initialization (Default to Dark)
-        if (localStorage.getItem('color-theme') === 'light') {
-            document.documentElement.classList.remove('dark');
-        } else {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
+    @livewireStyles
 </head>
 <body class="min-h-screen bg-surface-50 dark:bg-neutral-950 font-body antialiased transition-colors duration-300">
     <div class="min-h-screen flex">
@@ -96,5 +88,6 @@
         @if(session('error')) window.Toast.show('Error', "{{ session('error') }}", 'error'); @endif
     </script>
     @stack('scripts')
+    @livewireScripts
 </body>
 </html>

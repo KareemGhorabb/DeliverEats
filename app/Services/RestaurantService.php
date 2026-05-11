@@ -11,7 +11,7 @@ class RestaurantService
     public function getAllRestaurants(): Collection
     {
         return Restaurant::query()
-            ->with('menuCategories')
+            ->with(['menuCategories', 'user'])
             ->latest()
             ->get();
     }

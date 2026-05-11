@@ -378,6 +378,12 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
+        // Server-side logout detection: clear stale tokens
+        @if(session('logged_out'))
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+        @endif
+
         const token = localStorage.getItem('auth_token');
         const authButtons = document.getElementById('auth-buttons');
         const guestButtons = document.getElementById('guest-buttons');
@@ -397,14 +403,21 @@
                     else dashBtn.href = '/browse';
                 } else {
                     localStorage.removeItem('auth_token');
+                    localStorage.removeItem('auth_user');
                     authButtons.style.display = 'none';
                     guestButtons.style.display = 'flex';
                 }
-            } catch(e) {}
+            } catch(e) {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('auth_user');
+                authButtons.style.display = 'none';
+                guestButtons.style.display = 'flex';
+            }
 
-            document.getElementById('logout-btn').addEventListener('click', async () => {
+            document.getElementById('logout-btn')?.addEventListener('click', async () => {
                 await fetch('/api/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }});
                 localStorage.removeItem('auth_token');
+                localStorage.removeItem('auth_user');
                 window.location.reload();
             });
         } else {

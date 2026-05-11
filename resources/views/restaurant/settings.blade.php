@@ -93,6 +93,8 @@
                 category: document.getElementById('rest-category').value,
                 address: document.getElementById('rest-address').value,
                 phone: document.getElementById('rest-phone').value,
+                latitude: 30.0444, // Default Cairo lat for MVP
+                longitude: 31.2357, // Default Cairo lng for MVP
                 delivery_fee: parseFloat(document.getElementById('rest-delivery-fee').value) || 0,
                 description: document.getElementById('rest-desc').value
             };
@@ -118,7 +120,10 @@
                 
                 // Update local storage so sidebar updates instantly
                 const updatedUser = { ...user, restaurant_name: json.data.name, restaurant_id: json.data.id };
-                Auth.setUser(updatedUser);
+                localStorage.setItem('auth_user', JSON.stringify(updatedUser));
+                
+                const sidebarName = document.getElementById('sidebar-rest-name');
+                if (sidebarName) sidebarName.textContent = json.data.name;
             } else {
                 Toast.show('Error', json.message || 'Validation failed', 'error');
             }

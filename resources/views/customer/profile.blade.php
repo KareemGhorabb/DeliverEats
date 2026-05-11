@@ -9,13 +9,13 @@
         {{-- Avatar & basic info --}}
         <div class="bg-white rounded-2xl border border-surface-200/50 p-6">
             <div class="flex items-center gap-5">
-                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-brand-500/20">A</div>
+                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-brand-500/20">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
                 <div>
-                    <h2 class="text-lg font-display font-bold">Ahmed Hassan</h2>
-                    <p class="text-sm text-surface-300">Member since April 2025</p>
+                    <h2 class="text-lg font-display font-bold">{{ auth()->user()->name }}</h2>
+                    <p class="text-sm text-surface-300">Member since {{ auth()->user()->created_at->format('F Y') }}</p>
                     <div class="flex items-center gap-3 mt-2">
                         <span class="px-2.5 py-1 bg-amber-50 text-amber-700 text-[11px] font-bold rounded-full">Gold Member</span>
-                        <span class="text-xs text-surface-300">47 orders placed</span>
+                        <span class="text-xs text-surface-300">{{ auth()->user()->orders()->count() }} orders placed</span>
                     </div>
                 </div>
             </div>
@@ -27,15 +27,15 @@
             <div class="grid sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-medium text-surface-300 mb-1">Full Name</label>
-                    <input type="text" value="Ahmed Hassan" class="w-full px-4 py-2.5 rounded-xl bg-surface-50 border border-surface-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400">
+                    <input type="text" value="{{ auth()->user()->name }}" class="w-full px-4 py-2.5 rounded-xl bg-surface-50 border border-surface-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-surface-300 mb-1">Email</label>
-                    <input type="email" value="ahmed@delivereats.com" class="w-full px-4 py-2.5 rounded-xl bg-surface-50 border border-surface-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400">
+                    <input type="email" value="{{ auth()->user()->email }}" class="w-full px-4 py-2.5 rounded-xl bg-surface-50 border border-surface-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-surface-300 mb-1">Phone</label>
-                    <input type="tel" value="+20 100 234 5678" class="w-full px-4 py-2.5 rounded-xl bg-surface-50 border border-surface-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400">
+                    <input type="tel" value="{{ auth()->user()->phone ?? '' }}" placeholder="+20 100 234 5678" class="w-full px-4 py-2.5 rounded-xl bg-surface-50 border border-surface-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-surface-300 mb-1">Date of Birth</label>

@@ -210,7 +210,10 @@
     }
 
     function renderMap(order) {
-        if (typeof L === 'undefined') return;
+        if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+            window.addEventListener('google-maps-loaded', () => renderMap(order));
+            return;
+        }
         
         const restLat = parseFloat(order.restaurant?.latitude) || 30.0444;
         const restLng = parseFloat(order.restaurant?.longitude) || 31.2357;
@@ -218,16 +221,22 @@
         if (!mapInstance) {
             const mapEl = document.getElementById('tracking-map');
             if (!mapEl) return;
-            mapEl.innerHTML = '';
-            mapInstance = L.map('tracking-map', { zoomControl: false }).setView([restLat, restLng], 14);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap'
-            }).addTo(mapInstance);
-            L.control.zoom({ position: 'topright' }).addTo(mapInstance);
+            mapEl.innerHTML = ''; // Remove loading state
+            mapInstance = new google.maps.Map(mapEl, {
+                center: { lat: restLat, lng: restLng },
+                zoom: 14,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true,
+            });
 
             // Restaurant Marker
-            const restIcon = L.divIcon({ className: '', html: '<div style="background:#F26522;color:white;width:32px;height:32px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,0.2)">🏪</div>', iconSize: [32, 32] });
-            L.marker([restLat, restLng], { icon: restIcon }).addTo(mapInstance).bindPopup(`<b>${order.restaurant?.name || 'Restaurant'}</b>`);
+            new google.maps.Marker({
+                position: { lat: restLat, lng: restLng },
+                map: mapInstance,
+                title: order.restaurant?.name || 'Restaurant',
+                icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+            });
         }
 
         // Live Rider Marker
@@ -236,14 +245,20 @@
             const riderLng = parseFloat(order.rider.longitude);
 
             if (!riderMarker) {
-                const riderIcon = L.divIcon({ className: '', html: '<div style="background:#10B981;color:white;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 12px rgba(16,185,129,0.4);border:3px solid white">🛵</div>', iconSize: [36, 36] });
-                riderMarker = L.marker([riderLat, riderLng], { icon: riderIcon }).addTo(mapInstance);
+                riderMarker = new google.maps.Marker({
+                    position: { lat: riderLat, lng: riderLng },
+                    map: mapInstance,
+                    title: order.rider.name,
+                    icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                });
             } else {
-                riderMarker.setLatLng([riderLat, riderLng]);
+                riderMarker.setPosition({ lat: riderLat, lng: riderLng });
             }
             
-            const bounds = L.latLngBounds([[restLat, restLng], [riderLat, riderLng]]);
-            mapInstance.fitBounds(bounds, { padding: [50, 50] });
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend({ lat: restLat, lng: restLng });
+            bounds.extend({ lat: riderLat, lng: riderLng });
+            mapInstance.fitBounds(bounds);
         }
     }
 </script>

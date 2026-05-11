@@ -97,46 +97,55 @@
         });
 
         const cairo = [30.0444, 31.2357];
+    function initMap() {
+        if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+            window.addEventListener('google-maps-loaded', initMap);
+            return;
+        }
+
+        const cairo = { lat: 30.0444, lng: 31.2357 };
         
-        map = L.map('checkout-map').setView(cairo, 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(map);
-
-        marker = L.marker(cairo, { draggable: true }).addTo(map);
-
-        marker.on('dragend', async function(e) {
-            const pos = marker.getLatLng();
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}`);
-                const data = await res.json();
-                if (data && data.display_name) {
-                    updateAddressFields(data.display_name, pos.lat, pos.lng);
-                }
-            } catch (e) {
-                console.error("Geocoding failed", e);
-                updateAddressFields(`${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)}`, pos.lat, pos.lng);
-            }
+        map = new google.maps.Map(document.getElementById('checkout-map'), {
+            center: cairo,
+            zoom: 14,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: true,
         });
 
-        // Simple fallback for autocomplete since places API is removed
-        document.getElementById('address-autocomplete').addEventListener('change', async (e) => {
-            const query = e.target.value;
-            if(!query) return;
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
-                const data = await res.json();
-                if (data && data.length > 0) {
-                    const place = data[0];
-                    const lat = parseFloat(place.lat);
-                    const lon = parseFloat(place.lon);
-                    map.setView([lat, lon], 15);
-                    marker.setLatLng([lat, lon]);
-                    updateAddressFields(place.display_name, lat, lon);
+        marker = new google.maps.Marker({
+            position: cairo,
+            map: map,
+            draggable: true
+        });
+
+        const geocoder = new google.maps.Geocoder();
+
+        marker.addListener('dragend', function() {
+            const pos = marker.getPosition();
+            geocoder.geocode({ location: pos }, (results, status) => {
+                if (status === "OK" && results[0]) {
+                    updateAddressFields(results[0].formatted_address, pos.lat(), pos.lng());
+                    document.getElementById('address-autocomplete').value = results[0].formatted_address;
+                } else {
+                    updateAddressFields(`${pos.lat().toFixed(4)}, ${pos.lng().toFixed(4)}`, pos.lat(), pos.lng());
                 }
-            } catch (e) {
-                console.error("Search failed", e);
-            }
+            });
+        });
+
+        const input = document.getElementById('address-autocomplete');
+        const autocomplete = new google.maps.places.Autocomplete(input);
+        autocomplete.bindTo('bounds', map);
+
+        autocomplete.addListener('place_changed', function() {
+            const place = autocomplete.getPlace();
+            if (!place.geometry || !place.geometry.location) return;
+
+            map.setCenter(place.geometry.location);
+            map.setZoom(15);
+            marker.setPosition(place.geometry.location);
+
+            updateAddressFields(place.formatted_address || place.name, place.geometry.location.lat(), place.geometry.location.lng());
         });
     }
 
@@ -147,7 +156,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        if (typeof L !== 'undefined') initMap();
+        initMap();
         
         const items = Cart.getAll();
         if (items.length === 0) { window.location.href = '/browse'; return; }

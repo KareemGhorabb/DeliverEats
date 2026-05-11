@@ -13,6 +13,7 @@ use App\Listeners\DispatchRiderOnOrder;
 use App\Listeners\NotifyOrderStatusChange;
 use App\Listeners\ProcessPayoutOnDelivery;
 use App\Services\GoogleMapsDistanceCalculator;
+use App\Services\PaymentGatewayManager;
 use App\Services\PaymobPaymentGateway;
 use App\Services\External\PlaceholderNotificationService;
 use Illuminate\Support\Facades\Event;
@@ -25,10 +26,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Bind external service contracts to placeholder implementations.
-        // Replace these bindings when integrating real services.
+        // Bind external service contracts to implementations.
         $this->app->bind(DistanceCalculatorInterface::class, GoogleMapsDistanceCalculator::class);
-        $this->app->bind(PaymentGatewayInterface::class, PaymobPaymentGateway::class);
+        $this->app->bind(PaymentGatewayInterface::class, PaymentGatewayManager::class);
         $this->app->bind(NotificationServiceInterface::class, PlaceholderNotificationService::class);
     }
 

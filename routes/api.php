@@ -176,6 +176,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:admin')->prefix('admin')->name('api.admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard']);
         Route::get('/control-tower', [AdminController::class, 'controlTower']);
+        Route::get('/users', [AdminController::class, 'users']);
         Route::get('/restaurants', [AdminController::class, 'restaurants']);
         Route::get('/surge-pricing', [AdminController::class, 'surgePricing']);
         Route::post('/surge-pricing/override', [AdminController::class, 'setSurgeOverride']);

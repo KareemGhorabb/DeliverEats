@@ -32,18 +32,18 @@
 
         {{-- Order summary --}}
         <div class="lg:col-span-2">
-            <div class="bg-white rounded-2xl border border-surface-200/50 p-6 sticky top-20">
-                <h3 class="text-base font-display font-bold mb-4">Order Summary</h3>
+            <div class="bg-white dark:bg-neutral-900 rounded-2xl border border-surface-200/50 p-6 sticky top-20">
+                <h3 class="text-base font-display font-bold mb-4 text-white">Order Summary</h3>
                 <div class="space-y-3 text-sm">
-                    <div class="flex justify-between text-surface-800/70">
+                    <div class="flex justify-between text-surface-600 dark:text-gray-400">
                         <span>Subtotal</span>
                         <span class="font-medium">EGP <span id="summary-subtotal">0.00</span></span>
                     </div>
-                    <div class="flex justify-between text-surface-800/70">
+                    <div class="flex justify-between text-surface-600 dark:text-gray-400">
                         <span>Delivery Fee</span>
                         <span class="font-medium">EGP <span id="summary-delivery">2.99</span></span>
                     </div>
-                    <div class="flex justify-between text-surface-800/70">
+                    <div class="flex justify-between text-surface-600 dark:text-gray-400">
                         <span>Service Fee</span>
                         <span class="font-medium">EGP <span id="summary-fee">1.50</span></span>
                     </div>
@@ -103,19 +103,19 @@
             subtotal += (i.price * i.qty);
             const varIdArg = i.variantId ? `'${i.variantId}'` : 'null';
             return `
-            <div class="cart-item flex items-center gap-4 bg-white rounded-xl border border-surface-200/50 p-4">
+            <div class="cart-item flex items-center gap-4 bg-white dark:bg-neutral-900 hover:!bg-white dark:hover:!bg-neutral-900 rounded-xl border border-surface-200/50 p-4">
                 <div class="flex-1 min-w-0">
-                    <h3 class="text-sm font-semibold">${i.name}</h3>
+                    <h3 class="text-sm font-semibold text-white">${i.name}</h3>
                     <p class="text-xs text-surface-300 mt-0.5">${i.restaurant}</p>
                     <p class="text-sm font-bold text-brand-600 mt-1">EGP ${(i.price * i.qty).toFixed(2)}</p>
                 </div>
-                <div class="qty-stepper flex items-center gap-2">
+                <div class="qty-stepper flex items-center gap-2 ">
                     <button onclick="updateItemQty(${i.id}, ${varIdArg}, ${i.qty - 1})" class="w-8 h-8 rounded-lg border border-surface-200 flex items-center justify-center text-surface-800/60 hover:bg-brand-500 hover:text-white hover:border-brand-500 transition-all">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
                     </button>
-                    <span class="w-8 text-center text-sm font-bold">${i.qty}</span>
+                    <span class="w-8 text-center text-sm font-bold text-white">${i.qty}</span>
                     <button onclick="updateItemQty(${i.id}, ${varIdArg}, ${i.qty + 1})" class="w-8 h-8 rounded-lg border border-surface-200 flex items-center justify-center text-surface-800/60 hover:bg-brand-500 hover:text-white hover:border-brand-500 transition-all">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     </button>
                 </div>
                 <button onclick="removeItem(${i.id}, ${varIdArg})" class="p-2 text-surface-300 hover:text-red-500 transition-colors">

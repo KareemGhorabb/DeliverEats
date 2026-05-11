@@ -129,7 +129,7 @@ class AuthController extends Controller
             ]);
         }
 
-        return redirect('/');
+        return redirect('/')->with('logged_out', true);
     }
 
     /**
