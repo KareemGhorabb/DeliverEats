@@ -32,6 +32,7 @@ Route::get('/v1/surge/{restaurantId}', function (int $restaurantId) {
 */
 // External Webhooks
 Route::post('/v1/webhooks/paymob', [PaymobWebhookController::class, 'handleCallback']);
+Route::post('/v1/webhooks/stripe', [\App\Http\Controllers\Api\StripeWebhookController::class, 'handleWebhook']);
 
 Route::middleware('auth:sanctum')->group(function () {
 

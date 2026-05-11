@@ -73,7 +73,7 @@ class PaymentGatewayManager implements PaymentGatewayInterface
      */
     public function confirmPayment(string $paymentIntentId): bool
     {
-        if (str_starts_with($paymentIntentId, 'pi_')) {
+        if (str_starts_with($paymentIntentId, 'cs_')) {
             return $this->fallback->confirmPayment($paymentIntentId);
         }
 
@@ -85,7 +85,7 @@ class PaymentGatewayManager implements PaymentGatewayInterface
      */
     public function refund(string $paymentIntentId, ?float $amount = null): bool
     {
-        if (str_starts_with($paymentIntentId, 'pi_')) {
+        if (str_starts_with($paymentIntentId, 'cs_')) {
             return $this->fallback->refund($paymentIntentId, $amount);
         }
 

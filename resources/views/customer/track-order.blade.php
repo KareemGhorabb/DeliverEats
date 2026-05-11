@@ -199,7 +199,7 @@
             return `
                 <div class="relative pl-10">
                     <div class="timeline-dot ${dotClass}">${dotContent}</div>
-                    <p class="text-sm ${textClass}">${state.label}</p>
+                    <p class="text-sm">${state.label}</p>
                     ${isCurrent ? `<p class="text-[10px] text-brand-400 mt-0.5 font-medium">Actual step</p>` : ''}
                     ${(currentStatus === 'delivered' && state.id === 'delivered') ? `<p class="text-[10px] text-emerald-500 mt-0.5 font-bold">Successfully Delivered</p>` : ''}
                 </div>

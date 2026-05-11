@@ -125,7 +125,7 @@ $menu = ($menuCategories ?? collect())->map(function ($category) {
                                     @endif
                                 </div>
                                 <p class="text-xs text-surface-300 mt-1 leading-relaxed">{{ $item['desc'] }}</p>
-                                <p class="text-sm font-bold text-surface-900 mt-2">EGP {{ number_format($item['price'], 2) }}</p>
+                                <p class="text-sm font-bold  mt-2 text-black">EGP {{ number_format($item['price'], 2) }}</p>
                             </div>
                             <button class="mt-1 w-9 h-9 rounded-xl bg-surface-100 group-hover:bg-brand-500 group-hover:text-white text-surface-800/40 flex items-center justify-center transition-all flex-shrink-0">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>

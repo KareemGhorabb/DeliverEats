@@ -18,11 +18,8 @@ class PaymobPaymentGateway implements PaymentGatewayInterface
             $integrationId = config('services.paymob.integration_id');
 
             if (!$apiKey || !$integrationId) {
-                Log::warning('Paymob credentials missing. Returning mock payment intent.');
-                return [
-                    'payment_intent_id' => 'mock_pi_' . Str::random(10),
-                    'client_secret' => 'mock_sec_' . Str::random(10)
-                ];
+                Log::warning('Paymob credentials missing. Failing to trigger fallback.');
+                throw new \Exception('Paymob credentials missing.');
             }
 
             // 1. Auth token

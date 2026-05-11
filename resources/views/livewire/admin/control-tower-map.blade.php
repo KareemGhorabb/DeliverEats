@@ -1,51 +1,3 @@
-<?php
-
-use Livewire\Volt\Component;
-use App\Models\Order;
-use App\Models\User;
-use App\Models\Restaurant;
-
-
-new class extends Component {
-    
-    // We poll this method every 10 seconds to get fresh data
-    public function getMapData()
-    {
-        $riders = User::where('role', 'rider')
-            ->where('is_online', true)
-            ->select('id', 'name', 'latitude', 'longitude')
-            ->get();
-
-        $restaurants = Restaurant::select('id', 'name', 'latitude', 'longitude')->get();
-
-        $orders = Order::whereNotIn('status', ['delivered', 'cancelled', 'payment_pending'])
-            ->with(['restaurant:id,latitude,longitude', 'rider:id,latitude,longitude'])
-            ->get()
-            ->map(function ($order) {
-                return [
-                    'id' => $order->id,
-                    'status' => $order->status,
-                    'lat' => $order->restaurant ? $order->restaurant->latitude : null,
-                    'lng' => $order->restaurant ? $order->restaurant->longitude : null,
-                ];
-            });
-
-        return [
-            'riders' => $riders,
-            'restaurants' => $restaurants,
-            'orders' => $orders,
-        ];
-    }
-
-    public function with(): array
-    {
-        return [
-            'initialData' => $this->getMapData()
-        ];
-    }
-};
-?>
-
 <div 
     wire:poll.10s 
     x-data="controlTowerMap(@js($initialData))"
@@ -75,6 +27,9 @@ new class extends Component {
                 center: { lat: 30.0444, lng: 31.2357 }, // Cairo
                 zoom: 12,
                 mapId: 'DEMO_MAP_ID', 
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true,
             });
 
             this.updateMarkers(initialData);

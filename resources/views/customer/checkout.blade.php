@@ -48,7 +48,7 @@
                 <div class="space-y-2">
                     <label class="flex items-center gap-3 p-3 rounded-xl border-2 border-brand-500 bg-brand-50 dark:bg-brand-500/10 cursor-pointer">
                         <input type="radio" name="payment" value="card" checked class="text-brand-500 focus:ring-brand-500">
-                        <span class="text-sm font-medium flex-1 text-surface-900 dark:text-white">Pay Online (Paymob)</span>
+                        <span class="text-sm font-medium flex-1 text-surface-900 dark:text-white">Pay Online (Paymob or Stripe)</span>
                     </label>
                     <label class="flex items-center gap-3 p-3 rounded-xl border-2 border-surface-200 dark:border-white/10 hover:border-surface-300 dark:hover:border-white/20 cursor-pointer transition-colors">
                         <input type="radio" name="payment" value="cash" class="text-brand-500 focus:ring-brand-500">
@@ -87,16 +87,6 @@
 <script>
     let map, marker;
 
-    function initMap() {
-        // Fix Leaflet's default icon path issues
-        delete L.Icon.Default.prototype._getIconUrl;
-        L.Icon.Default.mergeOptions({
-            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-        });
-
-        const cairo = [30.0444, 31.2357];
     function initMap() {
         if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
             window.addEventListener('google-maps-loaded', initMap);
@@ -156,8 +146,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        initMap();
-        
+        // Render Cart items first, so a map error doesn't block checkout
         const items = Cart.getAll();
         if (items.length === 0) { window.location.href = '/browse'; return; }
 
@@ -174,6 +163,13 @@
 
         document.getElementById('checkout-subtotal').textContent = subtotal.toFixed(2);
         document.getElementById('checkout-total').textContent = total.toFixed(2);
+
+        // Try initializing map
+        try {
+            initMap();
+        } catch(e) {
+            console.error('Map init failed', e);
+        }
 
         document.getElementById('btn-place-order').addEventListener('click', async () => {
             const addr = document.getElementById('delivery-address').value;
@@ -206,8 +202,14 @@
                 if (json.success) {
                     Cart.clear();
                     if (json.data.payment_token) {
-                        const iframeId = '{{ config('services.paymob.iframe_id') }}';
-                        window.location.href = `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${json.data.payment_token}`;
+                        // If it's a Stripe Checkout Session URL
+                        if (json.data.payment_token.startsWith('http')) {
+                            window.location.href = json.data.payment_token;
+                        } else {
+                            // Otherwise, it's a Paymob token
+                            const iframeId = '{{ config('services.paymob.iframe_id') }}';
+                            window.location.href = `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${json.data.payment_token}`;
+                        }
                     } else {
                         window.location.href = `/orders/${json.data.id}/track`;
                     }

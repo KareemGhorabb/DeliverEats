@@ -28,8 +28,9 @@ Route::middleware('guest')->group(function () {
 // Logout (accessible to all, but only does something if logged in)
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Paymob Redirect Fallback
+// Payment Redirect Fallbacks
 Route::get('/checkout/processed', [PaymobWebhookController::class, 'checkoutProcessed'])->name('payment.processed');
+Route::get('/checkout/stripe/success/{order}', [\App\Http\Controllers\Api\StripeWebhookController::class, 'handleSuccess'])->name('stripe.success');
 
 /*
 |--------------------------------------------------------------------------

@@ -24,26 +24,34 @@ class StripePaymentGateway implements PaymentGatewayInterface
     public function createPaymentIntent(Order $order, string $currency = 'EGP'): array
     {
         try {
-            $intent = PaymentIntent::create([
-                'amount'   => (int) round($order->total * 100),
-                'currency' => strtolower($currency),
+            $session = \Stripe\Checkout\Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => strtolower($currency),
+                        'product_data' => [
+                            'name' => "DeliverEats Order #{$order->id}",
+                        ],
+                        'unit_amount' => (int) round($order->total * 100),
+                    ],
+                    'quantity' => 1,
+                ]],
+                'mode' => 'payment',
+                'success_url' => route('stripe.success', ['order' => $order->id]) . '?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => url('/checkout'),
                 'metadata' => [
-                    'order_id'      => $order->id,
-                    'customer_name' => $order->user->name ?? 'Guest',
-                    'restaurant'    => $order->restaurant->name ?? 'Unknown',
+                    'order_id' => $order->id,
                 ],
-                'description' => "DeliverEats Order #{$order->id}",
             ]);
 
-            Log::info('Stripe PaymentIntent created', [
+            Log::info('Stripe Checkout Session created', [
                 'order_id'   => $order->id,
-                'intent_id'  => $intent->id,
-                'amount'     => $intent->amount,
+                'session_id' => $session->id,
             ]);
 
             return [
-                'payment_intent_id' => $intent->id,
-                'client_secret'     => $intent->client_secret,
+                'payment_intent_id' => $session->id, // We'll store the session ID here
+                'client_secret'     => $session->url, // The frontend will redirect here
             ];
         } catch (ApiErrorException $e) {
             Log::error('Stripe createPaymentIntent failed', [
@@ -60,12 +68,13 @@ class StripePaymentGateway implements PaymentGatewayInterface
     public function confirmPayment(string $paymentIntentId): bool
     {
         try {
-            $intent = PaymentIntent::retrieve($paymentIntentId);
+            // $paymentIntentId is actually the Checkout Session ID (cs_test_...)
+            $session = \Stripe\Checkout\Session::retrieve($paymentIntentId);
 
-            return $intent->status === 'succeeded';
+            return $session->payment_status === 'paid';
         } catch (ApiErrorException $e) {
             Log::error('Stripe confirmPayment failed', [
-                'intent_id' => $paymentIntentId,
+                'session_id' => $paymentIntentId,
                 'error'     => $e->getMessage(),
             ]);
             return false;
@@ -78,7 +87,8 @@ class StripePaymentGateway implements PaymentGatewayInterface
     public function refund(string $paymentIntentId, ?float $amount = null): bool
     {
         try {
-            $params = ['payment_intent' => $paymentIntentId];
+            $session = \Stripe\Checkout\Session::retrieve($paymentIntentId);
+            $params = ['payment_intent' => $session->payment_intent];
 
             if ($amount !== null) {
                 $params['amount'] = (int) round($amount * 100);
@@ -87,14 +97,14 @@ class StripePaymentGateway implements PaymentGatewayInterface
             Refund::create($params);
 
             Log::info('Stripe refund processed', [
-                'intent_id' => $paymentIntentId,
+                'session_id' => $paymentIntentId,
                 'amount'    => $amount,
             ]);
 
             return true;
         } catch (ApiErrorException $e) {
             Log::error('Stripe refund failed', [
-                'intent_id' => $paymentIntentId,
+                'session_id' => $paymentIntentId,
                 'error'     => $e->getMessage(),
             ]);
             return false;
