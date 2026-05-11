@@ -5,6 +5,7 @@ use App\Models\Order;
 use App\Models\User;
 use App\Models\Restaurant;
 
+
 new class extends Component {
     
     // We poll this method every 10 seconds to get fresh data
