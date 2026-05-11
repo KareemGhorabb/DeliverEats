@@ -110,7 +110,7 @@
             const res = await fetch(`/api/v1/orders/${orderId}`, {
                 headers: {
                     'Accept': 'application/json',
-                    'Authorization': `Bearer ${Auth.getToken()}`
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
                 }
             });
             const json = await res.json();

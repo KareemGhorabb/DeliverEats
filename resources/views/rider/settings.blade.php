@@ -37,9 +37,12 @@
             Save All Changes
         </button>
 
-        <button onclick="Auth.logout()" class="w-full py-4 bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl font-bold text-sm hover:bg-red-500/20 transition-all mt-4">
-            Sign Out
-        </button>
+        <form method="POST" action="{{ route('logout') }}" class="m-0 p-0 w-full mt-4">
+            @csrf
+            <button type="submit" class="w-full py-4 bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl font-bold text-sm hover:bg-red-500/20 transition-all">
+                Sign Out
+            </button>
+        </form>
     </div>
 </div>
 @endsection

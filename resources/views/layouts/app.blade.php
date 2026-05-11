@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="DeliverEats — Your cravings, delivered. Order from the best local restaurants with real-time tracking.">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'DeliverEats — Your cravings, delivered.')</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -213,7 +214,7 @@
     </footer>
     @endif
 
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_key') }}&libraries=places"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         // Global Toast System

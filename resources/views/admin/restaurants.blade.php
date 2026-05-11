@@ -105,18 +105,25 @@
     document.addEventListener('DOMContentLoaded', () => {
         loadRestaurants();
         loadOwners();
-        initAutocomplete();
+        initAutocompleteFallback();
     });
 
-    function initAutocomplete() {
-        if (typeof google === 'undefined') return;
+    function initAutocompleteFallback() {
         const input = document.getElementById('modal-address');
-        const autocomplete = new google.maps.places.Autocomplete(input);
-        autocomplete.addListener('place_changed', () => {
-            const place = autocomplete.getPlace();
-            if (place.geometry) {
-                document.getElementById('modal-lat').value = place.geometry.location.lat();
-                document.getElementById('modal-lng').value = place.geometry.location.lng();
+        input.addEventListener('change', async (e) => {
+            const query = e.target.value;
+            if (!query) return;
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const place = data[0];
+                    document.getElementById('modal-lat').value = place.lat;
+                    document.getElementById('modal-lng').value = place.lon;
+                    input.value = place.display_name;
+                }
+            } catch (e) {
+                console.error("Geocoding failed", e);
             }
         });
     }

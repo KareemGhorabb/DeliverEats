@@ -75,13 +75,6 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
                     Surge Pricing
                 </a>
-
-                <div class="pt-4 mt-4 border-t border-surface-100 dark:border-white/5">
-                    <a href="{{ route('customer.home') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-surface-600 dark:text-gray-400 hover:bg-surface-50 dark:hover:bg-white/5 hover:text-surface-900 dark:hover:text-white transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
-                        Back to Store
-                    </a>
-                </div>
             </nav>
 
             <div class="p-4 border-t border-surface-100 dark:border-white/5">
@@ -136,7 +129,7 @@
         </div>
     </div>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_key') }}&libraries=places"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         window.Toast = {

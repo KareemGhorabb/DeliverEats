@@ -82,30 +82,17 @@
     const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
     
     let currentOrder = null;
-    let map, directionsService, directionsRenderer;
+    let map;
 
     function initMap() {
-        directionsService = new google.maps.DirectionsService();
-        directionsRenderer = new google.maps.DirectionsRenderer({
-            suppressMarkers: true,
-            polylineOptions: { strokeColor: "#F26522", strokeOpacity: 0.8, strokeWeight: 5 }
-        });
-        
-        map = new google.maps.Map(document.getElementById("rider-delivery-map"), {
-            zoom: 14,
-            center: { lat: 30.0444, lng: 31.2357 },
-            disableDefaultUI: true,
-            styles: document.documentElement.classList.contains('dark') ? [
-                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
-            ] : []
-        });
-        directionsRenderer.setMap(map);
+        map = L.map('rider-delivery-map', { zoomControl: false }).setView([30.0444, 31.2357], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        if (typeof google !== 'undefined') initMap();
+        if (typeof L !== 'undefined') initMap();
         if (orderId === 'active') fetchActiveOrder();
         else fetchOrder(orderId);
     });
@@ -149,21 +136,19 @@
         document.getElementById('del-customer-address').textContent = o.delivery_address || 'Cairo';
         document.getElementById('btn-call').href = `tel:${o.customer?.phone || '+201000000000'}`;
 
-        const restLoc = { lat: parseFloat(o.restaurant.latitude), lng: parseFloat(o.restaurant.longitude) };
-        const delLoc = { lat: parseFloat(o.delivery_lat || 30.0444), lng: parseFloat(o.delivery_lng || 31.2357) };
+        const restLoc = [parseFloat(o.restaurant.latitude), parseFloat(o.restaurant.longitude)];
+        const delLoc = [parseFloat(o.delivery_lat || 30.0444), parseFloat(o.delivery_lng || 31.2357)];
 
-        // Route Plotting
-        directionsService.route({
-            origin: restLoc,
-            destination: delLoc,
-            travelMode: google.maps.TravelMode.DRIVING
-        }, (result, status) => {
-            if (status === 'OK') {
-                directionsRenderer.setDirections(result);
-                new google.maps.Marker({ position: restLoc, map, icon: 'https://maps.google.com/mapfiles/kml/pal2/icon10.png' });
-                new google.maps.Marker({ position: delLoc, map, icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' });
-            }
-        });
+        if (map) {
+            const restIcon = L.divIcon({ className: '', html: '<div style="background:#F26522;color:white;width:28px;height:28px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.2)">🏪</div>', iconSize: [28, 28] });
+            const destIcon = L.divIcon({ className: '', html: '<div style="background:#3B82F6;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.2)">📍</div>', iconSize: [28, 28] });
+            
+            L.marker(restLoc, { icon: restIcon }).addTo(map);
+            L.marker(delLoc, { icon: destIcon }).addTo(map);
+            
+            const bounds = L.latLngBounds([restLoc, delLoc]);
+            map.fitBounds(bounds, { padding: [40, 40] });
+        }
 
         // UI Logic
         const btn = document.getElementById('btn-action');
@@ -189,7 +174,7 @@
         
         document.getElementById('btn-navigate').onclick = () => {
             const target = s === 'picked_up' ? delLoc : restLoc;
-            window.open(`https://www.google.com/maps/dir/?api=1&destination=${target.lat},${target.lng}`, '_blank');
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${target[0]},${target[1]}`, '_blank');
         };
     }
 

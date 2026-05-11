@@ -61,17 +61,11 @@
     const headers = { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` };
 
     function initMap() {
-        const cairo = { lat: 30.0444, lng: 31.2357 };
-        map = new google.maps.Map(document.getElementById("dispatch-map"), {
-            center: cairo,
-            zoom: 13,
-            disableDefaultUI: true,
-            styles: document.documentElement.classList.contains('dark') ? [
-                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
-            ] : []
-        });
+        const cairo = [30.0444, 31.2357];
+        map = L.map('dispatch-map', { zoomControl: false }).setView(cairo, 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
         
         loadData();
         setInterval(loadData, 10000); // Polling every 10s
@@ -114,53 +108,50 @@
     }
 
     function updateMarkers(orders) {
+        if (!map) return;
         // Clear old markers
-        markers.orders.forEach(m => m.setMap(null));
-        markers.riders.forEach(m => m.setMap(null));
+        markers.orders.forEach(m => m.remove());
+        markers.riders.forEach(m => m.remove());
         markers.orders = []; markers.riders = [];
+
+        const restIcon = L.divIcon({ className: '', html: '<div style="background:#3B82F6;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white">🏪</div>', iconSize: [24, 24] });
+        const riderIcon = L.divIcon({ className: '', html: '<div style="background:#10B981;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white">🛵</div>', iconSize: [24, 24] });
+        const orderIcon = L.divIcon({ className: '', html: '<div style="background:#EF4444;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white">📍</div>', iconSize: [24, 24] });
+
 
         orders.forEach(o => {
             // Order (Customer) Marker
             if (o.delivery_lat) {
-                const m = new google.maps.Marker({
-                    position: { lat: parseFloat(o.delivery_lat), lng: parseFloat(o.delivery_lng) },
-                    map,
-                    icon: { url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png', scaledSize: new google.maps.Size(32, 32) },
-                    title: `Order #${o.id}`
-                });
+                const m = L.marker([parseFloat(o.delivery_lat), parseFloat(o.delivery_lng)], { icon: orderIcon })
+                    .addTo(map)
+                    .bindPopup(`<b>Order #${o.id}</b>`);
                 markers.orders.push(m);
             }
             
             // Rider Marker
             if (o.rider && o.rider.rider_location) {
                 const loc = o.rider.rider_location;
-                const m = new google.maps.Marker({
-                    position: { lat: parseFloat(loc.latitude), lng: parseFloat(loc.longitude) },
-                    map,
-                    icon: { url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png', scaledSize: new google.maps.Size(40, 40) },
-                    title: `Rider: ${o.rider.name}`
-                });
+                const m = L.marker([parseFloat(loc.latitude), parseFloat(loc.longitude)], { icon: riderIcon })
+                    .addTo(map)
+                    .bindPopup(`<b>Rider: ${o.rider.name}</b>`);
                 markers.riders.push(m);
             }
             
             // Restaurant Marker
             if (o.restaurant) {
-                const m = new google.maps.Marker({
-                    position: { lat: parseFloat(o.restaurant.latitude), lng: parseFloat(o.restaurant.longitude) },
-                    map,
-                    icon: { url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', scaledSize: new google.maps.Size(32, 32) },
-                    title: o.restaurant.name
-                });
+                const m = L.marker([parseFloat(o.restaurant.latitude), parseFloat(o.restaurant.longitude)], { icon: restIcon })
+                    .addTo(map)
+                    .bindPopup(`<b>${o.restaurant.name}</b>`);
                 markers.restaurants.push(m);
             }
         });
     }
 
     window.focusOnOrder = (id) => { /* logic to pan map to specific order */ };
-    window.centerMap = () => { map.setCenter({ lat: 30.0444, lng: 31.2357 }); map.setZoom(13); };
+    window.centerMap = () => { if (map) map.setView([30.0444, 31.2357], 13); };
 
     document.addEventListener('DOMContentLoaded', () => {
-        if (typeof google !== 'undefined') initMap();
+        if (typeof L !== 'undefined') initMap();
     });
 </script>
 @endpush

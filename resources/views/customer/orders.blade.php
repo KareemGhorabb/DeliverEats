@@ -80,7 +80,7 @@
             const res = await fetch('/api/v1/orders', {
                 headers: {
                     'Accept': 'application/json',
-                    'Authorization': `Bearer ${Auth.getToken()}`
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
                 }
             });
             const json = await res.json();
@@ -148,7 +148,7 @@
                         <div class="flex items-center gap-4">
                             <div class="text-right hidden sm:block">
                                 <p class="text-sm font-black text-surface-900 dark:text-white">EGP ${parseFloat(order.total).toFixed(2)}</p>
-                                <p class="text-[9px] text-surface-400 dark:text-gray-500 uppercase font-bold tracking-widest">${order.payment_method || 'Cash'}</p>
+                                <p class="text-[9px] text-surface-400 dark:text-gray-500 uppercase font-bold tracking-widest">${order.payment?.method || order.payment_method || 'Cash'}</p>
                             </div>
                             <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${statusClasses}">${status.replace(/_/g, ' ')}</span>
                         </div>

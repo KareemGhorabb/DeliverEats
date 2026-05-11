@@ -34,11 +34,11 @@ class OrderController extends Controller
                 'message' => 'Order placed successfully.',
                 'data'    => new OrderResource($order),
             ], 201);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('Order Placement Failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => 'Failed to place order: ' . $e->getMessage(),
             ], 422);
         }
     }

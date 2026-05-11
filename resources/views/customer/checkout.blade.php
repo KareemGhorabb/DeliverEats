@@ -85,51 +85,58 @@
 
 @push('scripts')
 <script>
-    let map, marker, autocomplete;
+    let map, marker;
 
     function initMap() {
-        const cairo = { lat: 30.0444, lng: 31.2357 };
-        map = new google.maps.Map(document.getElementById("checkout-map"), {
-            center: cairo,
-            zoom: 14,
-            styles: document.documentElement.classList.contains('dark') ? [
-                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-                { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
-            ] : []
+        // Fix Leaflet's default icon path issues
+        delete L.Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
+            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
         });
 
-        marker = new google.maps.Marker({
-            position: cairo,
-            map: map,
-            draggable: true,
-            icon: {
-                url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
-                scaledSize: new google.maps.Size(40, 40)
+        const cairo = [30.0444, 31.2357];
+        
+        map = L.map('checkout-map').setView(cairo, 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        marker = L.marker(cairo, { draggable: true }).addTo(map);
+
+        marker.on('dragend', async function(e) {
+            const pos = marker.getLatLng();
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}`);
+                const data = await res.json();
+                if (data && data.display_name) {
+                    updateAddressFields(data.display_name, pos.lat, pos.lng);
+                }
+            } catch (e) {
+                console.error("Geocoding failed", e);
+                updateAddressFields(`${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)}`, pos.lat, pos.lng);
             }
         });
 
-        autocomplete = new google.maps.places.Autocomplete(document.getElementById('address-autocomplete'));
-        autocomplete.bindTo('bounds', map);
-
-        autocomplete.addListener('place_changed', () => {
-            const place = autocomplete.getPlace();
-            if (!place.geometry) return;
-
-            map.setCenter(place.geometry.location);
-            marker.setPosition(place.geometry.location);
-            updateAddressFields(place.formatted_address, place.geometry.location.lat(), place.geometry.location.lng());
-        });
-
-        marker.addListener('dragend', () => {
-            const pos = marker.getPosition();
-            const geocoder = new google.maps.Geocoder();
-            geocoder.geocode({ location: pos }, (results, status) => {
-                if (status === "OK" && results[0]) {
-                    updateAddressFields(results[0].formatted_address, pos.lat(), pos.lng());
+        // Simple fallback for autocomplete since places API is removed
+        document.getElementById('address-autocomplete').addEventListener('change', async (e) => {
+            const query = e.target.value;
+            if(!query) return;
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const place = data[0];
+                    const lat = parseFloat(place.lat);
+                    const lon = parseFloat(place.lon);
+                    map.setView([lat, lon], 15);
+                    marker.setLatLng([lat, lon]);
+                    updateAddressFields(place.display_name, lat, lon);
                 }
-            });
+            } catch (e) {
+                console.error("Search failed", e);
+            }
         });
     }
 
@@ -140,7 +147,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        if (typeof google !== 'undefined') initMap();
+        if (typeof L !== 'undefined') initMap();
         
         const items = Cart.getAll();
         if (items.length === 0) { window.location.href = '/browse'; return; }
@@ -170,7 +177,12 @@
             try {
                 const res = await fetch('/api/v1/orders', {
                     method: 'POST',
-                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': `Bearer ${Auth.getToken()}` },
+                    headers: { 
+                        'Accept': 'application/json', 
+                        'Content-Type': 'application/json', 
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
+                    },
                     body: JSON.stringify({
                         restaurant_id: items[0].restaurant_id,
                         delivery_address: addr,
@@ -195,7 +207,8 @@
                     btn.disabled = false; btn.innerHTML = 'Place Order';
                 }
             } catch (e) {
-                Toast.show('Error', 'A network error occurred.', 'error');
+                console.error("Checkout Error:", e);
+                Toast.show('Error', 'A network error occurred. See console.', 'error');
                 btn.disabled = false; btn.innerHTML = 'Place Order';
             }
         });

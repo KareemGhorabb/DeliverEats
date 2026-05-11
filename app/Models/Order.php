@@ -77,6 +77,11 @@ class Order extends Model
         return $this->hasOne(Review::class);
     }
 
+    public function payment(): HasOne
+    {
+        return $this->hasOne(Payment::class);
+    }
+
     // ──────────────────────────────────────────────
     // Scopes
     // ──────────────────────────────────────────────

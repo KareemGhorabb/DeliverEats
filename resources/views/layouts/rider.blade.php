@@ -58,7 +58,10 @@
                         </div>
                         <a href="{{ route('rider.settings') }}" class="block px-4 py-2 text-sm text-surface-700 dark:text-gray-300 hover:bg-surface-50 dark:hover:bg-white/5 transition-colors">Settings</a>
                         <div class="border-t border-surface-100 dark:border-white/5 my-1"></div>
-                        <a href="#" onclick="event.preventDefault(); Auth.logout()" class="block px-4 py-2 text-sm text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">Sign Out</a>
+                        <form method="POST" action="{{ route('logout') }}" class="m-0 p-0">
+                            @csrf
+                            <button type="submit" class="w-full text-left block px-4 py-2 text-sm text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">Sign Out</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -88,7 +91,7 @@
         </nav>
     </div>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_key') }}&libraries=places"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
