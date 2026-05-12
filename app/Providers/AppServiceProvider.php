@@ -18,6 +18,7 @@ use App\Services\PaymobPaymentGateway;
 use App\Services\External\PlaceholderNotificationService;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -48,5 +49,15 @@ class AppServiceProvider extends ServiceProvider
         // RiderAssigned — no additional listeners needed (handled via broadcast)
 
         // PaymentProcessed — no additional listeners needed (handled via broadcast)
+        
+        // Enforce strongest password requirements globally
+        Password::defaults(function () {
+            return Password::min(12)
+                ->letters()
+                ->mixedCase()
+                ->numbers()
+                ->symbols()
+                ->uncompromised();
+        });
     }
 }

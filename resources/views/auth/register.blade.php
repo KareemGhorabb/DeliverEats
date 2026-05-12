@@ -55,7 +55,7 @@
 
         <div>
             <label for="reg_password" class="block text-sm font-medium text-surface-800 dark:text-gray-200 mb-1.5">Password</label>
-            <input id="reg_password" type="password" name="password" required placeholder="Min 8 characters"
+            <input id="reg_password" type="password" name="password" required placeholder="Min 12 characters"
                 class="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-white/5 border border-surface-200 dark:border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 dark:text-white dark:placeholder:text-gray-500 transition-all pr-12">
         </div>
 
