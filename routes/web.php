@@ -46,6 +46,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/checkout', fn () => view('customer.checkout'))->name('checkout');
     });
 
+    Route::view('/discussion', 'admin.eng-haitham')->name('discussion');
+
     Route::prefix('orders')->name('customer.orders.')->group(function () {
         Route::get('/', fn () => view('customer.orders'))->name('index');
         Route::get('/{id}/track', fn ($id) => view('customer.track-order', ['id' => $id]))->name('track');
