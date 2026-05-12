@@ -15,6 +15,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
+
+        $middleware->redirectGuestsTo(fn () => route('login'));
+        $middleware->redirectUsersTo(function () {
+            $user = auth()->user();
+            if (!$user) return '/';
+            if ($user->isAdmin()) return '/admin/dashboard';
+            if ($user->isRestaurantOwner()) return '/restaurant/dashboard';
+            if ($user->isRider()) return '/rider/dashboard';
+            return '/browse';
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(function (\Illuminate\Http\Request $request, \Throwable $e) {

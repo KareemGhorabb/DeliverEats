@@ -5,18 +5,18 @@
 <div class="px-4 py-5">
     <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-center mb-6">
         <p class="text-sm text-emerald-100 mb-1">This Week's Earnings</p>
-        <p class="text-4xl font-display font-extrabold text-white">$542.50</p>
+        <p class="text-4xl font-display font-extrabold text-white">EGP 542.50</p>
         <p class="text-sm text-emerald-200 mt-1">68 deliveries · 4.9 avg rating</p>
     </div>
 
     <div class="grid grid-cols-2 gap-3 mb-6">
         <div class="bg-surface-800 rounded-xl p-4 border border-white/5">
             <p class="text-xs text-surface-300 mb-1">Base Pay</p>
-            <p class="text-lg font-bold">$408.00</p>
+            <p class="text-lg font-bold">EGP 408.00</p>
         </div>
         <div class="bg-surface-800 rounded-xl p-4 border border-white/5">
             <p class="text-xs text-surface-300 mb-1">Tips</p>
-            <p class="text-lg font-bold text-emerald-400">$134.50</p>
+            <p class="text-lg font-bold text-emerald-400">EGP 134.50</p>
         </div>
     </div>
 
@@ -38,7 +38,7 @@
                 <p class="text-sm font-medium {{ $i === 0 ? 'text-brand-400' : '' }}">{{ $d['day'] }}</p>
                 <p class="text-[10px] text-surface-300">{{ $d['deliveries'] }} deliveries · {{ $d['hours'] }}</p>
             </div>
-            <span class="text-sm font-bold text-emerald-400">${{ $d['earned'] }}</span>
+            <span class="text-sm font-bold text-emerald-400">EGP {{ $d['earned'] }}</span>
         </div>
         @endforeach
     </div>
@@ -48,9 +48,9 @@
             <h3 class="text-sm font-semibold">Payout Schedule</h3>
             <span class="text-xs text-emerald-400 font-medium">Weekly</span>
         </div>
-        <p class="text-xs text-surface-300">Next payout: <span class="text-white font-medium">Tuesday, Apr 29</span> via Stripe Connect</p>
+        <p class="text-xs text-surface-300">Next payout: <span class="text-white font-medium">Tuesday, Apr 29</span> via Paymob</p>
         <div class="mt-3 h-2 bg-surface-900 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full" style="width: 72%"></div></div>
-        <p class="text-[10px] text-surface-300 mt-1">$390 / $542.50 cleared</p>
+        <p class="text-[10px] text-surface-300 mt-1">EGP 390 / EGP 542.50 cleared</p>
     </div>
 </div>
 @endsection

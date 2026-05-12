@@ -6,8 +6,8 @@
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex items-center justify-between mb-8">
         <div>
-            <h1 class="text-2xl font-display font-bold">Order #ORD-20260426-001</h1>
-            <p class="text-sm text-surface-300 mt-0.5">Placed 12 minutes ago · Shawarma Station</p>
+            <h1 class="text-2xl font-display font-bold" id="order-title">Loading Order...</h1>
+            <p class="text-sm text-surface-300 mt-0.5" id="order-subtitle">Fetching details...</p>
         </div>
         <a href="{{ route('customer.orders.index') }}" class="text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors">All Orders →</a>
     </div>
@@ -16,91 +16,55 @@
         {{-- Map and status --}}
         <div class="lg:col-span-3 space-y-6">
             {{-- Live map --}}
-            <div class="map-container h-80 lg:h-96 relative" id="tracking-map">
-                <div class="absolute inset-0 flex items-center justify-center">
+            <div class="map-container h-80 lg:h-96 relative rounded-2xl overflow-hidden shadow-sm border border-surface-200" id="tracking-map">
+                <div class="absolute inset-0 flex items-center justify-center bg-surface-100">
                     <div class="text-center">
                         <div class="dot-loading mb-3"><span></span><span></span><span></span></div>
-                        <p class="text-sm text-surface-300">Loading live map...</p>
+                        <p class="text-sm text-surface-400 font-medium">Loading live map...</p>
                     </div>
                 </div>
             </div>
 
             {{-- Rider info --}}
-            <div class="bg-white rounded-2xl border border-surface-200/50 p-5 flex items-center gap-4">
-                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-lg font-bold">M</div>
+            <div id="rider-info-container" class="hidden bg-white rounded-2xl border border-surface-200/50 p-5 flex items-center gap-4">
+                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-lg font-bold" id="rider-avatar">R</div>
                 <div class="flex-1">
-                    <p class="text-sm font-semibold">Mohamed Ali</p>
+                    <p class="text-sm font-semibold" id="rider-name">Rider Assigned</p>
                     <div class="flex items-center gap-1.5 mt-0.5">
                         <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                        <span class="text-xs text-surface-300">4.9 · 1,240 deliveries</span>
+                        <span class="text-xs text-surface-300" id="rider-rating">4.9 Rider</span>
                     </div>
-                    <p class="text-xs text-emerald-600 font-medium mt-1">🛵 On the way — ETA 8 min</p>
                 </div>
-                <div class="flex gap-2">
-                    <button class="w-10 h-10 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center hover:bg-brand-100 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                    </button>
-                    <button class="w-10 h-10 rounded-full bg-surface-100 text-surface-800/60 flex items-center justify-center hover:bg-surface-200 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                    </button>
-                </div>
+                <button class="p-3 rounded-full bg-surface-50 text-surface-600 hover:bg-brand-50 hover:text-brand-600 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 011.94.86l-.85 3.85a1 1 0 01-.11.27l-.48.73A15.92 15.92 0 0115.97 19.12l.73-.48c.07-.05.17-.09.27-.11L19.88 19.4a1 1 0 01.86 1.94l-3.28 2a2 2 0 01-2.08 0 15.92 15.92 0 01-14.7-14.7 2 2 0 010-2.08z"/></svg>
+                </button>
             </div>
         </div>
 
         {{-- Order progress --}}
         <div class="lg:col-span-2">
-            <div class="bg-white rounded-2xl border border-surface-200/50 p-6">
-                <h3 class="text-base font-display font-bold mb-6">Order Progress</h3>
+            <div class="bg-white rounded-2xl border border-surface-200/50 p-6 shadow-sm">
+                <h3 class="text-base font-display font-bold mb-6 flex items-center justify-between">
+                    Order Progress
+                    <button onclick="fetchOrderData()" class="p-1 text-brand-600 hover:bg-brand-50 rounded transition-all" id="btn-refresh">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    </button>
+                </h3>
 
                 {{-- Status timeline --}}
-                <div class="order-timeline space-y-6">
-                    <div class="relative pl-8">
-                        <div class="timeline-dot completed top-1">
-                            <svg class="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        </div>
-                        <p class="text-sm font-semibold text-surface-900">Order Placed</p>
-                        <p class="text-xs text-surface-300 mt-0.5">9:42 PM — Payment confirmed</p>
-                    </div>
-                    <div class="relative pl-8">
-                        <div class="timeline-dot completed top-1">
-                            <svg class="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        </div>
-                        <p class="text-sm font-semibold text-surface-900">Restaurant Confirmed</p>
-                        <p class="text-xs text-surface-300 mt-0.5">9:43 PM — Shawarma Station accepted</p>
-                    </div>
-                    <div class="relative pl-8">
-                        <div class="timeline-dot completed top-1">
-                            <svg class="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        </div>
-                        <p class="text-sm font-semibold text-surface-900">Preparing</p>
-                        <p class="text-xs text-surface-300 mt-0.5">9:44 PM — Kitchen is on it</p>
-                    </div>
-                    <div class="relative pl-8">
-                        <div class="timeline-dot current top-1"></div>
-                        <p class="text-sm font-semibold text-brand-600">On the Way</p>
-                        <p class="text-xs text-surface-300 mt-0.5">9:54 PM — Mohamed picked up your order</p>
-                        <div class="mt-2 flex items-center gap-2 px-3 py-2 bg-brand-50 rounded-lg">
-                            <div class="animate-pulse-soft w-2 h-2 rounded-full bg-brand-500"></div>
-                            <span class="text-xs font-medium text-brand-700">Live tracking active</span>
-                        </div>
-                    </div>
-                    <div class="relative pl-8">
-                        <div class="timeline-dot top-1"></div>
-                        <p class="text-sm font-medium text-surface-300">Delivered</p>
-                        <p class="text-xs text-surface-300 mt-0.5">Estimated ~10:02 PM</p>
-                    </div>
+                <div class="order-timeline relative space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-surface-100" id="status-timeline">
+                    <!-- Populated via JS -->
                 </div>
 
                 {{-- Order items --}}
                 <div class="mt-8 pt-6 border-t border-surface-100">
-                    <h4 class="text-xs font-semibold text-surface-300 uppercase tracking-wider mb-3">Items</h4>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex justify-between"><span class="text-surface-800/70">2× Classic Chicken Shawarma</span><span>$13.98</span></div>
-                        <div class="flex justify-between"><span class="text-surface-800/70">1× Garlic Fries</span><span>$3.49</span></div>
-                        <div class="flex justify-between"><span class="text-surface-800/70">2× Fresh Lemonade</span><span>$5.98</span></div>
+                    <h4 class="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-4">Order Details</h4>
+                    <div class="space-y-3 text-sm" id="order-items-list">
+                        <!-- Populated via JS -->
                     </div>
-                    <div class="mt-3 pt-3 border-t border-surface-100 flex justify-between font-semibold">
-                        <span>Total</span><span>$32.28</span>
+                    <div class="mt-4 pt-4 border-t border-surface-100 flex justify-between font-display font-bold text-lg">
+                        <span class="text-surface-900">Total</span>
+                        <span id="order-total-price" class="text-brand-600">EGP 0.00</span>
                     </div>
                 </div>
             </div>
@@ -108,42 +72,195 @@
     </div>
 </div>
 
+<style>
+    .timeline-dot {
+        @apply absolute left-0 w-6 h-6 rounded-full border-4 border-white bg-surface-200 transition-all duration-500 z-10;
+    }
+    .timeline-dot.completed {
+        @apply bg-emerald-500 border-emerald-100 shadow-[0_0_10px_rgba(16,185,129,0.3)];
+    }
+    .timeline-dot.current {
+        @apply bg-brand-500 border-brand-100 scale-110 shadow-[0_0_15px_rgba(244,63,94,0.4)];
+    }
+    .timeline-dot.current::after {
+        content: '';
+        @apply absolute inset-0 rounded-full animate-ping bg-brand-400 opacity-40;
+    }
+    .order-timeline div:last-child {
+        @apply mb-0;
+    }
+</style>
+
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const mapEl = document.getElementById('tracking-map');
-        if (typeof L !== 'undefined' && mapEl) {
-            mapEl.innerHTML = '';
-            const map = L.map('tracking-map', { zoomControl: false }).setView([30.0444, 31.2357], 14);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap'
-            }).addTo(map);
+    const orderId = "{{ $id }}";
+    let mapInstance = null;
+    let riderMarker = null;
 
-            // Restaurant marker
-            const restaurantIcon = L.divIcon({ className: '', html: '<div style="background:#F26522;color:white;width:32px;height:32px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,0.2)">🌯</div>', iconSize: [32, 32] });
-            L.marker([30.0480, 31.2400], { icon: restaurantIcon }).addTo(map).bindPopup('<b>Shawarma Station</b><br>Pickup point');
-
-            // Customer marker
-            const customerIcon = L.divIcon({ className: '', html: '<div style="background:#3B82F6;color:white;width:32px;height:32px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,0.2)">📍</div>', iconSize: [32, 32] });
-            L.marker([30.0395, 31.2330], { icon: customerIcon }).addTo(map).bindPopup('<b>Your Location</b><br>12 Tahrir Square');
-
-            // Rider marker (animated)
-            const riderIcon = L.divIcon({ className: '', html: '<div style="background:#10B981;color:white;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 12px rgba(16,185,129,0.4);border:3px solid white">🛵</div>', iconSize: [36, 36] });
-            const riderMarker = L.marker([30.0450, 31.2370], { icon: riderIcon }).addTo(map).bindPopup('<b>Mohamed Ali</b><br>Your rider');
-
-            // Simulate rider movement
-            const positions = [[30.0450, 31.2370],[30.0445, 31.2365],[30.0440, 31.2360],[30.0435, 31.2355],[30.0430, 31.2350],[30.0425, 31.2345],[30.0420, 31.2340],[30.0415, 31.2338],[30.0410, 31.2335],[30.0405, 31.2333],[30.0400, 31.2331],[30.0395, 31.2330]];
-            let step = 0;
-            setInterval(() => {
-                if (step < positions.length) {
-                    riderMarker.setLatLng(positions[step]);
-                    step++;
-                }
-            }, 3000);
-
-            L.control.zoom({ position: 'topright' }).addTo(map);
-        }
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchOrderData();
+        setInterval(fetchOrderData, 10000); // Polling
     });
+
+    async function fetchOrderData() {
+        const btn = document.getElementById('btn-refresh');
+        if (btn) btn.classList.add('animate-spin');
+
+        try {
+            const res = await fetch(`/api/v1/orders/${orderId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                }
+            });
+            const json = await res.json();
+            
+            if (json.success && json.data) {
+                renderOrder(json.data);
+            }
+        } catch (e) { console.error(e); }
+        finally { if (btn) setTimeout(() => btn.classList.remove('animate-spin'), 500); }
+    }
+
+    function renderOrder(order) {
+        document.getElementById('order-title').textContent = `Order #ORD-${order.id}`;
+        document.getElementById('order-subtitle').textContent = `${order.restaurant?.name || 'Restaurant'} · ${new Date(order.created_at).toLocaleDateString()}`;
+
+        // Render Items
+        const itemsList = document.getElementById('order-items-list');
+        itemsList.innerHTML = order.items.map(item => `
+            <div class="flex justify-between items-start gap-4">
+                <span class="text-surface-600 flex-1">${item.quantity}× ${item.menu_item?.name || 'Item'}</span>
+                <span class="font-medium text-surface-900">EGP ${(item.unit_price * item.quantity).toFixed(2)}</span>
+            </div>
+        `).join('');
+        document.getElementById('order-total-price').textContent = `EGP ${parseFloat(order.total).toFixed(2)}`;
+
+        // Render Timeline
+        renderTimeline(order);
+
+        // Render Rider & Map
+        if (order.rider) {
+            document.getElementById('rider-info-container').classList.remove('hidden');
+            document.getElementById('rider-name').textContent = order.rider.name;
+            document.getElementById('rider-avatar').textContent = order.rider.name.charAt(0);
+        }
+
+        renderMap(order);
+    }
+
+    function renderTimeline(order) {
+        const states = [
+            { id: 'payment_pending', label: 'Awaiting Payment' },
+            { id: 'pending', label: 'Order Placed', legacy: 'placed' },
+            { id: 'accepted', label: 'Restaurant Confirmed', legacy: 'confirmed' },
+            { id: 'preparing', label: 'Preparing' },
+            { id: 'ready_for_pickup', label: 'Ready for Pickup' },
+            { id: 'rider_assigned', label: 'Rider Assigned' },
+            { id: 'picked_up', label: 'Rider Picked Up' },
+            { id: 'delivered', label: 'Delivered' }
+        ];
+
+        let currentStatus = order.status.value || order.status;
+        
+        // Find current index, supporting legacy names
+        let currentIndex = states.findIndex(s => s.id === currentStatus || (s.legacy && s.legacy === currentStatus));
+        
+        // Safety: If status not found (shouldn't happen), assume it's one step further if rider exists
+        if (currentIndex === -1 && order.rider_id) currentIndex = 5;
+
+        let isCancelled = currentStatus === 'cancelled';
+        if (isCancelled) {
+            document.getElementById('status-timeline').innerHTML = `
+                <div class="relative pl-10 py-1">
+                    <div class="timeline-dot bg-red-500 border-red-100 current"></div>
+                    <p class="text-sm font-bold text-red-600">Order Cancelled</p>
+                    <p class="text-xs text-surface-400 mt-0.5">This order has been cancelled.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const timelineHtml = states.map((state, index) => {
+            const isCompleted = index < currentIndex || (currentStatus === 'delivered' && state.id === 'delivered');
+            const isCurrent = index === currentIndex && currentStatus !== 'delivered';
+            
+            let dotClass = '';
+            if (isCompleted) dotClass = 'completed';
+            else if (isCurrent) dotClass = 'current';
+
+            let dotContent = '';
+            if (isCompleted) {
+                dotContent = `<svg class="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>`;
+            }
+
+            let textClass = isCurrent ? 'text-brand-600 font-bold' : (isCompleted ? 'text-surface-900 font-medium' : 'text-surface-300');
+            
+            return `
+                <div class="relative pl-10">
+                    <div class="timeline-dot ${dotClass}">${dotContent}</div>
+                    <p class="text-sm">${state.label}</p>
+                    ${isCurrent ? `<p class="text-[10px] text-brand-400 mt-0.5 font-medium">Actual step</p>` : ''}
+                    ${(currentStatus === 'delivered' && state.id === 'delivered') ? `<p class="text-[10px] text-emerald-500 mt-0.5 font-bold">Successfully Delivered</p>` : ''}
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('status-timeline').innerHTML = timelineHtml;
+    }
+
+    function renderMap(order) {
+        if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+            window.addEventListener('google-maps-loaded', () => renderMap(order));
+            return;
+        }
+        
+        const restLat = parseFloat(order.restaurant?.latitude) || 30.0444;
+        const restLng = parseFloat(order.restaurant?.longitude) || 31.2357;
+
+        if (!mapInstance) {
+            const mapEl = document.getElementById('tracking-map');
+            if (!mapEl) return;
+            mapEl.innerHTML = ''; // Remove loading state
+            mapInstance = new google.maps.Map(mapEl, {
+                center: { lat: restLat, lng: restLng },
+                zoom: 14,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true,
+            });
+
+            // Restaurant Marker
+            new google.maps.Marker({
+                position: { lat: restLat, lng: restLng },
+                map: mapInstance,
+                title: order.restaurant?.name || 'Restaurant',
+                icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+            });
+        }
+
+        // Live Rider Marker
+        if (order.rider && order.rider.latitude && order.rider.longitude) {
+            const riderLat = parseFloat(order.rider.latitude);
+            const riderLng = parseFloat(order.rider.longitude);
+
+            if (!riderMarker) {
+                riderMarker = new google.maps.Marker({
+                    position: { lat: riderLat, lng: riderLng },
+                    map: mapInstance,
+                    title: order.rider.name,
+                    icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                });
+            } else {
+                riderMarker.setPosition({ lat: riderLat, lng: riderLng });
+            }
+            
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend({ lat: restLat, lng: restLng });
+            bounds.extend({ lat: riderLat, lng: riderLng });
+            mapInstance.fitBounds(bounds);
+        }
+    }
 </script>
 @endpush
 @endsection

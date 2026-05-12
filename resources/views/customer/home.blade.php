@@ -20,23 +20,26 @@
     {{-- Category pills --}}
     <div class="flex gap-2 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-none mb-6">
         @php
-        $categories = [
-            ['name' => 'All', 'icon' => '🍽️', 'active' => true],
-            ['name' => 'Burgers', 'icon' => '🍔', 'active' => false],
-            ['name' => 'Pizza', 'icon' => '🍕', 'active' => false],
-            ['name' => 'Sushi', 'icon' => '🍣', 'active' => false],
-            ['name' => 'Shawarma', 'icon' => '🌯', 'active' => false],
-            ['name' => 'Healthy', 'icon' => '🥗', 'active' => false],
-            ['name' => 'Noodles', 'icon' => '🍜', 'active' => false],
-            ['name' => 'Dessert', 'icon' => '🍰', 'active' => false],
-            ['name' => 'Coffee', 'icon' => '☕', 'active' => false],
-            ['name' => 'Breakfast', 'icon' => '🥐', 'active' => false],
-        ];
+        // Define restaurant categories (not menu categories)
+        $restaurantCategories = collect([
+            ['name' => 'All', 'slug' => 'all', 'active' => true],
+            ['name' => 'Middle Eastern', 'slug' => 'middle-eastern', 'active' => false],
+            ['name' => 'Japanese', 'slug' => 'japanese', 'active' => false],
+            ['name' => 'Italian', 'slug' => 'italian', 'active' => false],
+            ['name' => 'Healthy', 'slug' => 'healthy', 'active' => false],
+            ['name' => 'Egyptian', 'slug' => 'egyptian', 'active' => false],
+            ['name' => 'French', 'slug' => 'french', 'active' => false],
+        ]);
         @endphp
-        @foreach($categories as $cat)
-        <button class="category-pill flex items-center gap-2 px-5 py-2.5 rounded-full border text-sm font-medium whitespace-nowrap {{ $cat['active'] ? 'active bg-brand-500 text-white border-brand-500' : 'bg-white text-surface-800/70 border-surface-200 hover:border-brand-300' }}" onclick="document.querySelectorAll('.category-pill').forEach(p => { p.classList.remove('active','bg-brand-500','text-white','border-brand-500'); p.classList.add('bg-white','text-surface-800/70','border-surface-200'); }); this.classList.add('active','bg-brand-500','text-white','border-brand-500'); this.classList.remove('bg-white','text-surface-800/70','border-surface-200');">
-            <span class="text-base">{{ $cat['icon'] }}</span>
-            {{ $cat['name'] }}
+        @foreach($restaurantCategories as $pill)
+        <button
+            class="category-pill flex items-center gap-2 px-5 py-2.5 rounded-full border text-sm font-medium whitespace-nowrap {{ $pill['active'] ? 'active bg-brand-500 text-white border-brand-500' : 'bg-white text-surface-800/70 border-surface-200 hover:border-brand-300' }}"
+            data-category="{{ $pill['slug'] }}"
+            data-restaurant-category="{{ $pill['slug'] }}"
+            onclick="window.filterRestaurantsByCategory('{{ $pill['slug'] }}', this)"
+        >
+            <span class="text-base">🍽️</span>
+            {{ $pill['name'] }}
         </button>
         @endforeach
     </div>
@@ -55,10 +58,24 @@
     {{-- Filters --}}
     <div class="flex items-center gap-3 mb-6 flex-wrap">
         <span class="text-sm font-medium text-surface-800/60">Sort by:</span>
-        <button class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-surface-900 text-white">Recommended</button>
-        <button class="px-3.5 py-1.5 text-xs font-medium rounded-lg bg-white border border-surface-200 text-surface-800/70 hover:border-brand-300 transition-colors">Fastest</button>
-        <button class="px-3.5 py-1.5 text-xs font-medium rounded-lg bg-white border border-surface-200 text-surface-800/70 hover:border-brand-300 transition-colors">Top Rated</button>
-        <button class="px-3.5 py-1.5 text-xs font-medium rounded-lg bg-white border border-surface-200 text-surface-800/70 hover:border-brand-300 transition-colors">Price ↑</button>
+        <button
+            data-sort="recommended"
+            class="sort-btn px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-surface-900 text-white"
+        >Recommended</button>
+        <button
+            data-sort="fastest"
+            class="sort-btn px-3.5 py-1.5 text-xs font-medium rounded-lg bg-white border border-surface-200 text-surface-800/70 hover:border-brand-300 transition-colors"
+        >Fastest</button>
+        <button
+            data-sort="top-rated"
+            class="sort-btn px-3.5 py-1.5 text-xs font-medium rounded-lg bg-white border border-surface-200 text-surface-800/70 hover:border-brand-300 transition-colors"
+        >Top Rated</button>
+        <button
+            data-sort="price-asc"
+            class="sort-btn px-3.5 py-1.5 text-xs font-medium rounded-lg bg-white border border-surface-200 text-surface-800/70 hover:border-brand-300 transition-colors"
+            data-label-asc="Price ↑"
+            data-label-desc="Price ↓"
+        >Price ↑</button>
         <div class="ml-auto flex items-center gap-2">
             <span class="text-xs text-surface-300 hidden sm:inline">Surge pricing active in your area</span>
             <span class="surge-badge inline-flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-700 text-[11px] font-bold rounded-full">
@@ -71,23 +88,74 @@
     {{-- Restaurant grid --}}
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 stagger-children">
         @php
-        $allRestaurants = [
-            ['name' => 'Shawarma Station', 'cuisine' => 'Middle Eastern · Grilled', 'rating' => '4.8', 'reviews' => '324', 'time' => '20-30', 'fee' => '2.99', 'gradient' => 'from-amber-400 to-orange-500', 'emoji' => '🌯', 'promo' => null, 'featured' => true],
-            ['name' => 'Pizza Republic', 'cuisine' => 'Italian · Pizza · Pasta', 'rating' => '4.6', 'reviews' => '891', 'time' => '25-35', 'fee' => '1.99', 'gradient' => 'from-red-400 to-rose-500', 'emoji' => '🍕', 'promo' => '20% OFF', 'featured' => false],
-            ['name' => 'Sushi Zen', 'cuisine' => 'Japanese · Sushi · Poke', 'rating' => '4.9', 'reviews' => '156', 'time' => '30-40', 'fee' => '3.99', 'gradient' => 'from-cyan-400 to-blue-500', 'emoji' => '🍣', 'promo' => null, 'featured' => false],
-            ['name' => 'The Green Bowl', 'cuisine' => 'Healthy · Bowls · Salads', 'rating' => '4.7', 'reviews' => '203', 'time' => '15-25', 'fee' => '2.49', 'gradient' => 'from-emerald-400 to-green-500', 'emoji' => '🥗', 'promo' => 'Free Delivery', 'featured' => false],
-            ['name' => 'Burger District', 'cuisine' => 'American · Burgers · Fries', 'rating' => '4.5', 'reviews' => '1.2K', 'time' => '20-30', 'fee' => '1.49', 'gradient' => 'from-yellow-400 to-amber-500', 'emoji' => '🍔', 'promo' => null, 'featured' => true],
-            ['name' => 'Noodle House', 'cuisine' => 'Asian · Ramen · Thai', 'rating' => '4.7', 'reviews' => '445', 'time' => '25-35', 'fee' => '2.99', 'gradient' => 'from-violet-400 to-purple-500', 'emoji' => '🍜', 'promo' => null, 'featured' => false],
-            ['name' => "Mama's Kitchen", 'cuisine' => 'Home-style · Egyptian', 'rating' => '4.8', 'reviews' => '567', 'time' => '30-45', 'fee' => '1.99', 'gradient' => 'from-pink-400 to-rose-500', 'emoji' => '🍲', 'promo' => null, 'featured' => false],
-            ['name' => 'Bab El-Hara', 'cuisine' => 'Levantine · BBQ · Mezze', 'rating' => '4.6', 'reviews' => '289', 'time' => '25-40', 'fee' => '2.49', 'gradient' => 'from-orange-400 to-red-500', 'emoji' => '🥙', 'promo' => '15% OFF', 'featured' => false],
-            ['name' => 'Sweet Cravings', 'cuisine' => 'Desserts · Bakery · Waffles', 'rating' => '4.4', 'reviews' => '178', 'time' => '15-20', 'fee' => '1.99', 'gradient' => 'from-fuchsia-400 to-pink-500', 'emoji' => '🧁', 'promo' => null, 'featured' => false],
-        ];
+        $allRestaurants = ($restaurants ?? collect())->map(function ($restaurant, $index) {
+            $gradients = [
+                'from-amber-400 to-orange-500',
+                'from-red-400 to-rose-500',
+                'from-cyan-400 to-blue-500',
+                'from-emerald-400 to-green-500',
+                'from-yellow-400 to-amber-500',
+                'from-violet-400 to-purple-500',
+            ];
+
+            // Calculate average menu item price
+            $menuItems = $restaurant->menuCategories->flatMap(function ($category) {
+                return $category->menuItems ?? collect();
+            });
+            
+            $avgMenuPrice = 0;
+            if ($menuItems->isNotEmpty()) {
+                $totalPrice = $menuItems->sum(function ($item) {
+                    // Get the lowest variant price or use item price
+                    if ($item->itemVariants && $item->itemVariants->isNotEmpty()) {
+                        return $item->itemVariants->min('price') ?? $item->price ?? 0;
+                    }
+                    return $item->price ?? 0;
+                });
+                $avgMenuPrice = $totalPrice / $menuItems->count();
+            }
+
+            return [
+                'slug' => $restaurant->slug,
+                'name' => $restaurant->name,
+                'category' => $restaurant->category ?? 'Restaurant',
+                'rating' => number_format((float) ($restaurant->avg_rating ?? 0), 1),
+                'reviews' => (string) ($restaurant->total_reviews ?? 0),
+                'time' => [20, 15, 30, 25, 18, 22, 12, 28][$index % 8],
+                'fee' => number_format((float) ($restaurant->min_order_amount ?? 0), 2),
+                'avg_menu_price' => number_format($avgMenuPrice, 2),
+                'logo' => $restaurant->logo,
+                'gradient' => $gradients[$index % count($gradients)],
+                'emoji' => '🍽️',
+                'promo' => null,
+                'featured' => (bool) ($restaurant->is_featured ?? false),
+            ];
+        });
         @endphp
 
         @foreach($allRestaurants as $r)
-        <a href="{{ route('customer.restaurant', ['slug' => \Illuminate\Support\Str::slug($r['name'])]) }}" class="restaurant-card restaurant-item bg-white rounded-2xl overflow-hidden border border-surface-200/50 group">
+        <a
+            href="{{ route('customer.restaurant', ['slug' => $r['slug']]) }}"
+            class="restaurant-card restaurant-item bg-white rounded-2xl overflow-hidden border border-surface-200/50 group"
+            data-restaurant-category="{{ \Illuminate\Support\Str::slug($r['category']) }}"
+            data-rating="{{ $r['rating'] }}"
+            data-fee="{{ $r['fee'] }}"
+            data-menu-price="{{ $r['avg_menu_price'] }}"
+            data-time="{{ $r['time'] }}"
+        >
             <div class="h-36 bg-gradient-to-br {{ $r['gradient'] }} relative overflow-hidden">
-                <div class="absolute inset-0 flex items-center justify-center text-6xl opacity-25 group-hover:scale-110 transition-transform duration-500">{{ $r['emoji'] }}</div>
+                @if(!empty($r['logo']))
+                    <img
+                        src="{{ $r['logo'] }}"
+                        alt="{{ $r['name'] }} logo"
+                        class="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        onerror="this.style.display='none';"
+                    >
+                    <div class="absolute inset-0 bg-gradient-to-t from-surface-900/40 via-surface-900/10 to-transparent"></div>
+                @else
+                    <div class="absolute inset-0 flex items-center justify-center text-6xl opacity-25 group-hover:scale-110 transition-transform duration-500">{{ $r['emoji'] }}</div>
+                @endif
                 @if($r['promo'])
                 <div class="absolute top-3 right-3 px-2.5 py-1 bg-brand-500 text-white rounded-lg text-[11px] font-bold shadow-sm">{{ $r['promo'] }}</div>
                 @endif
@@ -99,7 +167,7 @@
                 <div class="flex items-start justify-between">
                     <div>
                         <h3 class="text-sm font-display font-bold group-hover:text-brand-600 transition-colors">{{ $r['name'] }}</h3>
-                        <p class="text-xs text-surface-300 mt-0.5">{{ $r['cuisine'] }}</p>
+                        <p class="text-xs text-surface-300 mt-0.5">{{ $r['category'] }}</p>
                     </div>
                     <div class="flex items-center gap-1 px-2 py-0.5 bg-emerald-50 rounded text-emerald-700">
                         <svg class="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
@@ -110,7 +178,7 @@
                 <div class="flex items-center gap-4 mt-3 pt-3 border-t border-surface-100 text-xs text-surface-800/50">
                     <span class="flex items-center gap-1">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        {{ $r['time'] }} min
+                        {{ is_numeric($r['time']) ? $r['time'] : $r['time'] }} min
                     </span>
                     <span>${{ $r['fee'] }} delivery</span>
                     <span class="ml-auto text-[10px] uppercase tracking-wider text-emerald-600 font-semibold">Open</span>
@@ -120,4 +188,117 @@
         @endforeach
     </div>
 </div>
+
+<script>
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    window.filterRestaurantsByCategory = function (categorySlug, button) {
+        document.querySelectorAll('.category-pill').forEach((pill) => {
+            pill.classList.remove('active', 'bg-brand-500', 'text-white', 'border-brand-500');
+            pill.classList.add('bg-white', 'text-surface-800/70', 'border-surface-200');
+        });
+
+        button.classList.add('active', 'bg-brand-500', 'text-white', 'border-brand-500');
+        button.classList.remove('bg-white', 'text-surface-800/70', 'border-surface-200');
+
+        document.querySelectorAll('.restaurant-item').forEach((card) => {
+            // Check if restaurant matches the selected category
+            const restaurantCategory = card.dataset.restaurantCategory || '';
+            const matches = categorySlug === 'all' || restaurantCategory === categorySlug;
+            card.style.display = matches ? '' : 'none';
+        });
+    };
+
+    // Initialize sorting functionality
+    (function () {
+        // Track original DOM order so Recommended can restore it
+        const grid = document.querySelector('.grid.sm\\:grid-cols-2.lg\\:grid-cols-3');
+        if (!grid) {
+            console.error('Grid not found');
+            return;
+        }
+
+        // Capture original order once on load
+        const originalOrder = Array.from(grid.querySelectorAll('.restaurant-item'));
+        console.log('Found', originalOrder.length, 'restaurant items');
+
+        // Active button state classes
+        const ACTIVE_CLASSES   = ['bg-surface-900', 'text-white', 'font-semibold'];
+        const INACTIVE_CLASSES = ['bg-white', 'border', 'border-surface-200', 'text-surface-800/70', 'font-medium'];
+
+        function setActiveButton(activeBtn) {
+            document.querySelectorAll('.sort-btn').forEach((btn) => {
+                btn.classList.remove(...ACTIVE_CLASSES);
+                btn.classList.add(...INACTIVE_CLASSES);
+            });
+            activeBtn.classList.remove(...INACTIVE_CLASSES);
+            activeBtn.classList.add(...ACTIVE_CLASSES);
+        }
+
+        function sortCards(compareFn) {
+            // Only sort currently visible cards; hidden ones (from category filter) stay hidden
+            const allCards = Array.from(grid.querySelectorAll('.restaurant-item'));
+            const visible  = allCards.filter((c) => c.style.display !== 'none');
+            const hidden   = allCards.filter((c) => c.style.display === 'none');
+
+            visible.sort(compareFn);
+
+            // Re-append in new order (hidden ones go to end, preserving their hidden state)
+            [...visible, ...hidden].forEach((card) => grid.appendChild(card));
+        }
+
+        // Price button toggles between asc and desc
+        let priceAsc = true;
+
+        // Add event listeners to sort buttons
+        const sortButtons = document.querySelectorAll('.sort-btn');
+        console.log('Found', sortButtons.length, 'sort buttons');
+        
+        sortButtons.forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Sort button clicked:', btn.dataset.sort);
+                
+                const sort = btn.dataset.sort;
+                setActiveButton(btn);
+
+                if (sort === 'recommended') {
+                    // Restore original DOM order
+                    originalOrder.forEach((card) => grid.appendChild(card));
+                    console.log('Restored original order');
+
+                } else if (sort === 'fastest') {
+                    sortCards((a, b) => {
+                        const tA = parseFloat(a.dataset.time) || 999;
+                        const tB = parseFloat(b.dataset.time) || 999;
+                        return tA - tB; // ascending: lowest time first
+                    });
+                    console.log('Sorted by fastest');
+
+                } else if (sort === 'top-rated') {
+                    sortCards((a, b) => {
+                        const rA = parseFloat(a.dataset.rating) || 0;
+                        const rB = parseFloat(b.dataset.rating) || 0;
+                        return rB - rA; // descending: highest rating first
+                    });
+                    console.log('Sorted by top rated');
+
+                } else if (sort === 'price-asc' || sort === 'price-desc') {
+                    // Sort by average menu item price (lowest first)
+                    sortCards((a, b) => {
+                        const priceA = parseFloat(a.dataset.menuPrice) || 0;
+                        const priceB = parseFloat(b.dataset.menuPrice) || 0;
+                        return priceA - priceB; // ascending: lowest menu price first
+                    });
+                    
+                    // Update button to show Price ↓ (indicating it can be toggled)
+                    btn.textContent = 'Price ↓';
+                    btn.dataset.sort = 'price-desc';
+                    console.log('Sorted by lowest menu price first');
+                }
+            });
+        });
+    })();
+});
+</script>
 @endsection
