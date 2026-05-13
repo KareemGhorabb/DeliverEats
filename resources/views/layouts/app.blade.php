@@ -4,17 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="DeliverEats — Your cravings, delivered. Order from the best local restaurants with real-time tracking.">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'DeliverEats — Your cravings, delivered.')</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    @livewireStyles
 </head>
-<body class="min-h-screen bg-surface-50 font-body text-surface-900 antialiased">
+<body class="min-h-screen bg-surface-50 dark:bg-neutral-950 font-body text-surface-900 dark:text-gray-100 antialiased transition-colors duration-300">
 
     {{-- ── Top Navigation ─────────────────────────────────── --}}
-    <nav class="fixed top-0 inset-x-0 z-50 glass border-b border-white/30 no-print">
+    <nav class="fixed top-0 inset-x-0 z-50 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-xl border-b border-surface-100 dark:border-white/10 no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 {{-- Logo --}}
@@ -22,68 +24,88 @@
                     <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-md shadow-brand-500/25 group-hover:shadow-brand-500/40 transition-shadow">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                     </div>
-                    <span class="text-lg font-display font-bold tracking-tight">Deliver<span class="text-brand-500">Eats</span></span>
+                    <span class="text-lg font-display font-bold tracking-tight dark:text-white">Deliver<span class="text-brand-500">Eats</span></span>
                 </a>
 
                 {{-- Desktop Nav Links --}}
                 <div class="hidden md:flex items-center gap-1">
-                    <a href="{{ route('customer.home') }}" class="px-4 py-2 text-sm font-medium text-surface-800/70 hover:text-brand-600 rounded-lg hover:bg-brand-50 transition-all">Browse</a>
-                    <a href="{{ route('customer.orders.index') }}" class="px-4 py-2 text-sm font-medium text-surface-800/70 hover:text-brand-600 rounded-lg hover:bg-brand-50 transition-all">My Orders</a>
+                    <a href="{{ route('customer.home') }}" class="px-4 py-2 text-sm font-medium text-surface-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-500 rounded-lg transition-all">Browse</a>
+                    <a href="{{ route('customer.orders.index') }}" class="px-4 py-2 text-sm font-medium text-surface-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-500 rounded-lg transition-all">My Orders</a>
                 </div>
 
                 {{-- Right side --}}
                 <div class="flex items-center gap-3">
+
+
                     {{-- Cart --}}
-                    <a href="{{ route('customer.cart') }}" class="relative p-2 rounded-xl hover:bg-brand-50 transition-colors group">
-                        <svg class="w-6 h-6 text-surface-800/70 group-hover:text-brand-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                    <a href="{{ route('customer.cart') }}" class="relative p-2 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-colors group">
+                        <svg class="w-6 h-6 text-surface-600 dark:text-gray-400 group-hover:text-brand-600 dark:group-hover:text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
                         <span class="cart-badge-wrapper absolute -top-0.5 -right-0.5 hidden">
                             <span data-cart-count class="flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-brand-500 rounded-full shadow-sm">0</span>
                         </span>
                     </a>
 
-                    {{-- Profile Dropdown --}}
+                    {{-- Profile / Auth --}}
                     <div class="relative">
-                        <button data-dropdown-toggle="profile-dropdown" class="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full hover:bg-surface-100 transition-colors border border-surface-200">
-                            <span class="text-sm font-medium hidden sm:block">Ahmed</span>
-                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-xs font-bold">A</div>
-                        </button>
-                        <div id="profile-dropdown" class="dropdown-menu hidden open:block absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-surface-200/60 py-2 z-50">
-                            <div class="px-4 py-3 border-b border-surface-100">
-                                <p class="text-sm font-semibold">Ahmed Hassan</p>
-                                <p class="text-xs text-surface-300">ahmed@delivereats.com</p>
-                            </div>
-                            <a href="{{ route('customer.profile') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-surface-800/80 hover:bg-surface-50 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                My Profile
-                            </a>
-                            <a href="{{ route('customer.orders.index') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-surface-800/80 hover:bg-surface-50 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                                Order History
-                            </a>
-                            <div class="border-t border-surface-100 my-1"></div>
-                            <a href="{{ route('restaurant.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-surface-800/80 hover:bg-surface-50 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                Restaurant Portal
-                            </a>
-                            <a href="{{ route('rider.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-surface-800/80 hover:bg-surface-50 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                Rider Dashboard
-                            </a>
-                            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-surface-800/80 hover:bg-surface-50 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                                Admin Panel
-                            </a>
-                            <div class="border-t border-surface-100 my-1"></div>
-                            <a href="{{ route('login') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                                Sign Out
-                            </a>
+                        @guest
+                        <div id="guest-auth-buttons" class="flex items-center gap-2">
+                            <a href="{{ route('login') }}" class="px-4 py-2 text-sm font-medium text-surface-600 dark:text-gray-400 hover:text-brand-600 rounded-lg transition-all">Sign In</a>
+                            <a href="{{ route('register') }}" class="px-4 py-2 text-sm font-semibold text-white bg-brand-500 rounded-xl hover:bg-brand-600 transition-colors">Register</a>
                         </div>
+                        @else
+                        <div id="auth-profile-wrapper" class="relative">
+                            <button id="user-dropdown-btn" class="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full hover:bg-surface-100 dark:hover:bg-white/5 transition-colors border border-surface-200 dark:border-white/10 focus:outline-none">
+                                <span class="text-sm font-medium hidden sm:block dark:text-white">{{ auth()->user()->name }}</span>
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-xs font-bold uppercase">{{ substr(auth()->user()->name, 0, 1) }}</div>
+                            </button>
+                            <div id="user-dropdown-menu" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-neutral-900 rounded-2xl shadow-xl border border-surface-200/60 dark:border-white/10 py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                                <div class="px-4 py-3 border-b border-surface-100 dark:border-white/5">
+                                    <p class="text-sm font-semibold dark:text-white">{{ auth()->user()->name }}</p>
+                                    <p class="text-xs text-surface-400">{{ auth()->user()->email }}</p>
+                                </div>
+                                <a href="{{ route('customer.profile') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-surface-700 dark:text-gray-300 hover:bg-surface-50 dark:hover:bg-white/5 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                    My Profile
+                                </a>
+                                <a href="{{ route('customer.orders.index') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-surface-700 dark:text-gray-300 hover:bg-surface-50 dark:hover:bg-white/5 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                    My Orders
+                                </a>
+                                
+                                {{-- Role-based dashboards --}}
+                                @if(auth()->user()->isAdmin())
+                                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-brand-600 dark:text-brand-400 hover:bg-surface-50 dark:hover:bg-white/5 transition-colors font-semibold">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                        Admin Panel
+                                    </a>
+                                @elseif(auth()->user()->isRestaurantOwner())
+                                    <a href="{{ route('restaurant.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-brand-600 dark:text-brand-400 hover:bg-surface-50 dark:hover:bg-white/5 transition-colors font-semibold">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                        Restaurant Portal
+                                    </a>
+                                @elseif(auth()->user()->isRider())
+                                    <a href="{{ route('rider.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-brand-600 dark:text-brand-400 hover:bg-surface-50 dark:hover:bg-white/5 transition-colors font-semibold">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        Rider Dashboard
+                                    </a>
+                                @endif
+
+                                <div class="border-t border-surface-100 dark:border-white/5 my-1"></div>
+                                <form method="POST" action="{{ route('logout') }}" class="m-0 p-0">
+                                    @csrf
+                                    <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                        Sign Out
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        @endguest
                     </div>
 
                     {{-- Mobile menu button --}}
-                    <button id="mobile-menu-toggle" class="md:hidden p-2 rounded-lg hover:bg-surface-100 transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    <button id="mobile-menu-toggle" class="md:hidden p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-white/5 transition-colors">
+                        <svg class="w-6 h-6 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
                 </div>
             </div>
@@ -92,23 +114,25 @@
 
     {{-- Mobile menu overlay --}}
     <div id="mobile-menu-overlay" class="hidden fixed inset-0 bg-black/40 z-40 md:hidden"></div>
-    <div id="mobile-menu" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform -translate-x-full transition-transform duration-300 md:hidden shadow-2xl">
-        <div class="p-5 border-b border-surface-100 flex items-center justify-between">
-            <span class="text-lg font-display font-bold">Deliver<span class="text-brand-500">Eats</span></span>
-            <button id="mobile-menu-toggle" class="p-2 -mr-2 rounded-lg hover:bg-surface-100">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    <div id="mobile-menu" class="fixed top-0 left-0 bottom-0 w-72 bg-white dark:bg-neutral-900 z-50 transform -translate-x-full transition-transform duration-300 md:hidden shadow-2xl">
+        <div class="p-5 border-b border-surface-100 dark:border-white/5 flex items-center justify-between">
+            <span class="text-lg font-display font-bold dark:text-white">Deliver<span class="text-brand-500">Eats</span></span>
+            <button id="mobile-menu-close" class="p-2 -mr-2 rounded-lg hover:bg-surface-100 dark:hover:bg-white/5">
+                <svg class="w-5 h-5 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
         <nav class="p-4 space-y-1">
-            <a href="{{ route('customer.home') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium hover:bg-brand-50 hover:text-brand-600 transition-colors">
+            <a href="{{ route('customer.home') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium hover:bg-brand-50 hover:text-brand-600 dark:text-gray-300 dark:hover:bg-brand-500/10 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 Browse Restaurants
             </a>
-            <a href="{{ route('customer.orders.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium hover:bg-brand-50 hover:text-brand-600 transition-colors">
+            @auth
+            <a href="{{ route('customer.orders.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium hover:bg-brand-50 hover:text-brand-600 dark:text-gray-300 dark:hover:bg-brand-500/10 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                 My Orders
             </a>
-            <a href="{{ route('customer.cart') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium hover:bg-brand-50 hover:text-brand-600 transition-colors">
+            @endauth
+            <a href="{{ route('customer.cart') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium hover:bg-brand-50 hover:text-brand-600 dark:text-gray-300 dark:hover:bg-brand-500/10 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m1.6 8l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
                 Cart
             </a>
@@ -181,6 +205,77 @@
     @endif
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Global Toast System
+        window.Toast = {
+            show(title, message, icon = 'info') {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    background: document.documentElement.classList.contains('dark') ? '#1f2937' : '#fff',
+                    color: document.documentElement.classList.contains('dark') ? '#f3f4f6' : '#1f2937',
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
+                });
+                Toast.fire({ icon, title: message });
+            }
+        };
+
+        // Handle Laravel Session Flash
+        @if(session('success')) window.Toast.show('Success', "{{ session('success') }}", 'success'); @endif
+        @if(session('error')) window.Toast.show('Error', "{{ session('error') }}", 'error'); @endif
+
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Dropdown Logic
+            const dropdownBtn = document.getElementById('user-dropdown-btn');
+            const dropdownMenu = document.getElementById('user-dropdown-menu');
+            if (dropdownBtn && dropdownMenu) {
+                dropdownBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('hidden');
+                });
+                document.addEventListener('click', () => {
+                    dropdownMenu.classList.add('hidden');
+                });
+            }
+
+            // Mobile Menu Logic
+            const mobileBtn = document.getElementById('mobile-menu-toggle');
+            const mobileCloseBtn = document.getElementById('mobile-menu-close');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileOverlay = document.getElementById('mobile-menu-overlay');
+
+            if (mobileBtn && mobileMenu) {
+                mobileBtn.addEventListener('click', () => {
+                    mobileMenu.classList.remove('-translate-x-full');
+                    mobileOverlay.classList.remove('hidden');
+                });
+                mobileCloseBtn?.addEventListener('click', closeMobileMenu);
+                mobileOverlay?.addEventListener('click', closeMobileMenu);
+            }
+
+            function closeMobileMenu() {
+                mobileMenu.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            }
+        });
+    </script>
     @stack('scripts')
+    @livewireScripts
+    <script>
+        function initGoogleMaps() {
+            window.dispatchEvent(new Event('google-maps-loaded'));
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_key') }}&callback=initGoogleMaps&libraries=places&v=weekly" defer></script>
 </body>
 </html>

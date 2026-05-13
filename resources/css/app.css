@@ -17,7 +17,7 @@
     --color-surface-200: #E8E8E3;
     --color-surface-300: #D4D4CF;
     --color-surface-800: #1E1E2E;
-    --color-surface-900: #13131F;
+    --color-surface-900: #ffffff;
     --color-surface-950: #0B0B14;
 
     --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
@@ -144,7 +144,7 @@ body {
 
 /* ── Glassmorphism panels ──────────────────────────── */
 .glass {
-    background: rgba(255, 255, 255, 0.72);
+    background: rgba(0, 0, 0, 0.72);
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.4);

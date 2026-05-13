@@ -1,54 +1,187 @@
 <?php
 
+use App\Http\Controllers\Api\PaymobWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\MenuItemController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PayoutController;
+use App\Http\Controllers\Api\RestaurantController;
+use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\RiderController;
+use App\Http\Controllers\Api\UserController;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+/*
+|--------------------------------------------------------------------------
+| Public Routes
+|--------------------------------------------------------------------------
+*/
 
-Route::post('/register',[AuthController::class,'register']);
-Route::post('/login',[AuthController::class,'login']);
+// Public surge check (for browse page dynamic badge)
+Route::get('/v1/surge/{restaurantId}', function (int $restaurantId) {
+    $multiplier = app(\App\Services\SurgeService::class)->getCurrentMultiplier($restaurantId);
+    return response()->json(['success' => true, 'data' => ['multiplier' => $multiplier]]);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Authenticated Routes
+|--------------------------------------------------------------------------
+*/
+// External Webhooks
+Route::post('/v1/webhooks/paymob', [PaymobWebhookController::class, 'handleCallback']);
+Route::post('/v1/webhooks/stripe', [\App\Http\Controllers\Api\StripeWebhookController::class, 'handleWebhook']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout',[AuthController::class,'logout']);
-});
 
-Route::middleware('auth:sanctum')->get('/profile', [AuthController::class, 'profile']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/profile', [AuthController::class, 'profile']);
+    Route::get('/user', fn (Request $request) => $request->user());
 
-Route::middleware(['auth:sanctum', 'role:customer'])->prefix('customer')->name('api.customer.')->group(function () {
-    Route::get('/home', fn () => response()->json(['message' => 'Customer Home Data']));
-    Route::get('/restaurants/{slug}', fn ($slug) => response()->json(['message' => 'Restaurant Data', 'slug' => $slug]));
-    Route::get('/cart', fn () => response()->json(['message' => 'Cart Data']));
-    Route::post('/checkout', fn () => response()->json(['message' => 'Checkout Processing']));
-    
-    Route::prefix('orders')->group(function () {
-        Route::get('/', fn () => response()->json(['message' => 'Customer Orders List']));
-        Route::get('/{id}/track', fn ($id) => response()->json(['message' => 'Tracking Order', 'order_id' => $id]));
-        Route::post('/{id}/review', fn ($id) => response()->json(['message' => 'Submit Review', 'order_id' => $id]));
+    // ──────────────────────────────────────────────
+    // RESTAURANT & MENU MANAGEMENT
+    // ──────────────────────────────────────────────
+    Route::apiResource('/v1/restaurants', RestaurantController::class);
+    Route::apiResource('/v1/menu-items', MenuItemController::class);
+    Route::patch('/v1/menu-items/{id}/toggle-availability', [MenuItemController::class, 'toggleAvailability']);
+
+    // ──────────────────────────────────────────────
+    // USERS (Admin)
+    // ──────────────────────────────────────────────
+    Route::apiResource('/v1/users', UserController::class);
+
+    // ──────────────────────────────────────────────
+    // ORDERS (all roles, role-filtered in controller)
+    // ──────────────────────────────────────────────
+    Route::prefix('v1/orders')->group(function () {
+        Route::get('/', [OrderController::class, 'index']);
+        Route::post('/', [OrderController::class, 'store']);
+        Route::get('/{id}', [OrderController::class, 'show']);
+        Route::patch('/{id}/status', [OrderController::class, 'updateStatus']);
+        Route::post('/{id}/cancel', [OrderController::class, 'cancel']);
+        Route::get('/{id}/history', [OrderController::class, 'history']);
     });
-});
 
-Route::middleware(['auth:sanctum', 'role:rider'])->prefix('rider')->name('api.rider.')->group(function () {
-    Route::get('/dashboard', fn () => response()->json(['message' => 'Rider Dashboard Data']));
-    Route::get('/delivery/{id}', fn ($id) => response()->json(['message' => 'Delivery Details', 'delivery_id' => $id]));
-    Route::get('/earnings', fn () => response()->json(['message' => 'Rider Earnings Data']));
-});
+    // ──────────────────────────────────────────────
+    // REVIEWS
+    // ──────────────────────────────────────────────
+    Route::post('/v1/orders/{orderId}/review', [ReviewController::class, 'store']);
+    Route::get('/v1/restaurants/{restaurantId}/reviews', [ReviewController::class, 'restaurantReviews']);
 
-Route::middleware(['auth:sanctum', 'role:restaurant_owner'])->prefix('restaurant')->name('api.restaurant.')->group(function () {
-    Route::get('/dashboard', fn () => response()->json(['message' => 'Restaurant Dashboard Data']));
-    Route::get('/menu', fn () => response()->json(['message' => 'Restaurant Menu Data']));
-    Route::get('/orders', fn () => response()->json(['message' => 'Restaurant Orders List']));
-    Route::get('/reviews', fn () => response()->json(['message' => 'Restaurant Reviews']));
-    Route::get('/payouts', fn () => response()->json(['message' => 'Restaurant Payouts Data']));
-    Route::get('/settings', fn () => response()->json(['message' => 'Restaurant Settings Data']));
-});
+    // ──────────────────────────────────────────────
+    // PAYOUTS (role-aware in controller)
+    // ──────────────────────────────────────────────
+    Route::get('/v1/payouts', [PayoutController::class, 'index']);
 
-Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->name('api.admin.')->group(function () {
-    Route::get('/dashboard', fn () => response()->json(['message' => 'Admin Dashboard Data']));
-    Route::get('/control-tower', fn () => response()->json(['message' => 'Admin Control Tower Data']));
-    Route::get('/users', fn () => response()->json(['message' => 'Admin Users List']));
-    Route::get('/restaurants', fn () => response()->json(['message' => 'Admin Restaurants List']));
-    Route::get('/surge-pricing', fn () => response()->json(['message' => 'Admin Surge Pricing Data']));
+    // ──────────────────────────────────────────────
+    // CUSTOMER ROUTES
+    // ──────────────────────────────────────────────
+    Route::middleware('role:customer')->prefix('customer')->name('api.customer.')->group(function () {
+        Route::get('/orders', [OrderController::class, 'index']);
+    });
+
+    // ──────────────────────────────────────────────
+    // RIDER ROUTES
+    // ──────────────────────────────────────────────
+    Route::middleware('role:rider')->prefix('rider')->name('api.rider.')->group(function () {
+        Route::get('/dashboard', [RiderController::class, 'dashboard']);
+        Route::post('/location', [RiderController::class, 'updateLocation']);
+        Route::get('/earnings', [RiderController::class, 'earnings']);
+        Route::get('/delivery/{id}', [RiderController::class, 'delivery']);
+        
+        // Order lifecycle endpoints
+        Route::get('/orders/available', [RiderController::class, 'availableOrders']);
+        Route::post('/orders/{id}/accept', [RiderController::class, 'acceptOrder']);
+        Route::patch('/orders/{id}/pickup', [RiderController::class, 'pickupOrder']);
+        Route::patch('/orders/{id}/deliver', [RiderController::class, 'deliverOrder']);
+        Route::get('/orders/history', [RiderController::class, 'history']);
+    });
+
+    // ──────────────────────────────────────────────
+    // RESTAURANT OWNER ROUTES
+    // ──────────────────────────────────────────────
+    Route::middleware('role:restaurant_owner')->prefix('restaurant')->name('api.restaurant.')->group(function () {
+        Route::get('/dashboard', function (Request $request) {
+            $restaurant = $request->user()->restaurantsOwned()->first();
+            if (! $restaurant) {
+                return response()->json(['success' => false, 'message' => 'No restaurant found.'], 404);
+            }
+            $activeOrders = \App\Models\Order::where('restaurant_id', $restaurant->id)
+                ->active()->with(['user', 'items.menuItem'])->latest()->get();
+            $todayOrders = \App\Models\Order::where('restaurant_id', $restaurant->id)
+                ->whereDate('created_at', today())->count();
+            $earnings = app(\App\Services\PayoutService::class)->getRestaurantEarnings($restaurant->id);
+            
+            // Re-fetch restaurant to get latest avg_rating
+            $restaurant->refresh();
+
+            return response()->json([
+                'success' => true,
+                'data' => compact('restaurant', 'activeOrders', 'todayOrders', 'earnings'),
+            ]);
+        });
+        
+        // Debugging Helper: Create a test order for this restaurant
+        Route::post('/test-order', function (Request $request) {
+            $user = $request->user();
+            $restaurant = $user->restaurantsOwned()->first();
+            if (!$restaurant) return response()->json(['success' => false, 'message' => 'No restaurant found.']);
+            
+            $order = \App\Models\Order::create([
+                'user_id' => $user->id,
+                'restaurant_id' => $restaurant->id,
+                'status' => \App\Enums\OrderStatus::Pending,
+                'subtotal' => 100,
+                'delivery_fee' => 15,
+                'surge_multiplier' => 1.0,
+                'tax' => 14,
+                'total' => 129,
+                'delivery_address' => 'Test Street, Cairo',
+            ]);
+            
+            // Create a dummy item
+            $menuItem = $restaurant->menuItems()->first();
+            if ($menuItem) {
+                $order->items()->create([
+                    'menu_item_id' => $menuItem->id,
+                    'quantity' => 1,
+                    'unit_price' => $menuItem->price,
+                    'total_price' => $menuItem->price,
+                ]);
+            }
+            
+            return response()->json(['success' => true, 'order_id' => $order->id, 'status' => $order->status]);
+        });
+
+        Route::get('/orders', [OrderController::class, 'index']);
+        Route::get('/reviews', function (Request $request) {
+            $restaurant = $request->user()->restaurantsOwned()->first();
+            return app(ReviewController::class)->restaurantReviews($restaurant?->id ?? 0);
+        });
+        Route::get('/payouts', function (Request $request) {
+            $restaurant = $request->user()->restaurantsOwned()->first();
+            $earnings = app(\App\Services\PayoutService::class)->getRestaurantEarnings($restaurant?->id ?? 0);
+            return response()->json(['success' => true, 'data' => $earnings]);
+        });
+        Route::get('/settings', function (Request $request) {
+            $restaurant = $request->user()->restaurantsOwned()->first();
+            return response()->json(['success' => true, 'data' => $restaurant]);
+        });
+    });
+
+    // ──────────────────────────────────────────────
+    // ADMIN ROUTES
+    // ──────────────────────────────────────────────
+    Route::middleware('role:admin')->prefix('admin')->name('api.admin.')->group(function () {
+        Route::get('/dashboard', [AdminController::class, 'dashboard']);
+        Route::get('/control-tower', [AdminController::class, 'controlTower']);
+        Route::get('/users', [AdminController::class, 'users']);
+        Route::get('/restaurants', [AdminController::class, 'restaurants']);
+        Route::get('/surge-pricing', [AdminController::class, 'surgePricing']);
+        Route::post('/surge-pricing/override', [AdminController::class, 'setSurgeOverride']);
+        Route::get('/reviews', [AdminController::class, 'reviews']);
+        Route::post('/payouts/{id}/mark-paid', [PayoutController::class, 'markPaid']);
+    });
 });

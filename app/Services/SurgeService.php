@@ -2,88 +2,94 @@
 
 namespace App\Services;
 
-use App\Models\Order;
+use App\Services\Surge\SurgeStrategyInterface;
+use App\Services\Surge\DemandBasedStrategy;
+use App\Services\Surge\TimeBasedStrategy;
+use App\Services\Surge\MultiplierStrategy;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
+/**
+ * Surge Pricing Engine — Strategy Pattern implementation.
+ *
+ * Combines multiple pricing strategies to compute a dynamic
+ * delivery fee multiplier based on demand, time, and manual overrides.
+ */
 class SurgeService
 {
-    /**
-     * Redis cache TTL for surge multiplier values (5 minutes).
-     */
-    private const CACHE_TTL_SECONDS = 300;
+    /** @var SurgeStrategyInterface[] */
+    private array $strategies;
+
+    public function __construct()
+    {
+        $this->strategies = [
+            new DemandBasedStrategy(),
+            new TimeBasedStrategy(),
+            new MultiplierStrategy(),
+        ];
+    }
 
     /**
-     * Surge pricing tiers based on active order count.
-     * Format: [min_orders => multiplier]
-     */
-    private const SURGE_TIERS = [
-        0  => 1.0,
-        5  => 1.25,
-        10 => 1.5,
-        20 => 1.75,
-        30 => 2.0,
-        40 => 2.5,
-    ];
-
-    /**
-     * Get the currently cached surge multiplier for a restaurant.
-     * Falls back to 1.0 if not yet calculated.
+     * Get the current surge multiplier for a restaurant.
+     * Result is cached for 2 minutes to avoid recalculating on every request.
      */
     public function getCurrentMultiplier(int $restaurantId): float
     {
-        return (float) Cache::remember(
-            $this->cacheKey($restaurantId),
-            self::CACHE_TTL_SECONDS,
-            fn () => $this->computeMultiplier($restaurantId)
+        return Cache::remember(
+            "surge:restaurant:{$restaurantId}",
+            120, // 2 minutes TTL
+            fn () => $this->calculateMultiplier($restaurantId)
         );
     }
 
     /**
-     * Recalculate the surge multiplier for a restaurant and store it in Redis.
-     *
-     * @param  int  $restaurantId
-     * @return float  The newly calculated multiplier
+     * Recalculate and cache the surge multiplier.
      */
     public function recalculate(int $restaurantId): float
     {
-        $multiplier = $this->computeMultiplier($restaurantId);
+        $multiplier = $this->calculateMultiplier($restaurantId);
 
-        // Store in Redis with TTL
-        Cache::put($this->cacheKey($restaurantId), $multiplier, self::CACHE_TTL_SECONDS);
-
-        Log::info("SurgeService: Restaurant [{$restaurantId}] surge multiplier updated to {$multiplier}x.");
+        Cache::put("surge:restaurant:{$restaurantId}", $multiplier, 120);
 
         return $multiplier;
     }
 
     /**
-     * Compute the surge multiplier based on the number of active orders.
+     * Calculate the combined multiplier from all strategies.
+     * Uses the maximum multiplier from all strategies.
      */
-    private function computeMultiplier(int $restaurantId): float
+    private function calculateMultiplier(int $restaurantId): float
     {
-        // Count active orders for this restaurant in the last 30 minutes
-        $activeOrders = Order::where('restaurant_id', $restaurantId)
-            ->whereIn('status', ['pending', 'confirmed', 'preparing', 'ready', 'assigned', 'picked_up'])
-            ->where('created_at', '>=', now()->subMinutes(30))
-            ->count();
-
         $multiplier = 1.0;
 
-        foreach (self::SURGE_TIERS as $minOrders => $tierMultiplier) {
-            if ($activeOrders >= $minOrders) {
-                $multiplier = $tierMultiplier;
-            }
+        foreach ($this->strategies as $strategy) {
+            $strategyMultiplier = $strategy->calculate($restaurantId);
+            $multiplier = max($multiplier, $strategyMultiplier);
         }
 
-        return $multiplier;
+        // Cap at 3x to protect customers
+        return min(round($multiplier, 2), 3.0);
     }
 
     /**
-     * Generate the Redis cache key for a restaurant's surge multiplier.
+     * Get breakdown of all strategy contributions.
      */
-    private function cacheKey(int $restaurantId): string
+    public function getBreakdown(int $restaurantId): array
     {
-        return "surge:restaurant:{$restaurantId}";
+        $breakdown = [];
+
+        foreach ($this->strategies as $strategy) {
+            $className = class_basename($strategy);
+            $breakdown[$className] = [
+                'multiplier' => $strategy->calculate($restaurantId),
+                'name'       => $strategy->name(),
+            ];
+        }
+
+        $breakdown['final'] = [
+            'multiplier' => $this->getCurrentMultiplier($restaurantId),
+            'name'       => 'Final (max of all strategies, capped at 3.0x)',
+        ];
+
+        return $breakdown;
     }
 }

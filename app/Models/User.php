@@ -2,22 +2,30 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
 use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'role', 'avatar', 'address', 'latitude', 'longitude', 'is_active', 'provider', 'provider_id'])]
-
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+
+    protected $fillable = [
+        'name', 'email', 'password', 'phone', 'role',
+        'avatar', 'address', 'latitude', 'longitude', 'is_active',
+        'provider', 'provider_id',
+    ];
+
+    protected $hidden = [
+        'password', 'remember_token',
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -28,50 +36,64 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_active' => 'boolean',
-            'latitude' => 'decimal:7',
-            'longitude' => 'decimal:7',
+            'password'          => 'hashed',
+            'is_active'         => 'boolean',
+            'latitude'          => 'decimal:7',
+            'longitude'         => 'decimal:7',
+            'role'              => UserRole::class,
         ];
     }
 
-    public function orders()
+    // ──────────────────────────────────────────────
+    // Relationships
+    // ──────────────────────────────────────────────
+
+    public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
     }
 
-    public function restaurantsOwned()
+    public function restaurantsOwned(): HasMany
     {
         return $this->hasMany(Restaurant::class, 'user_id');
     }
 
-    public function riderLocation()
+    public function riderLocation(): HasOne
     {
         return $this->hasOne(RiderLocation::class);
     }
 
-    public function reviews()
+    public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
     }
 
+    public function riderPayouts(): HasMany
+    {
+        return $this->hasMany(Payout::class, 'rider_id');
+    }
+
+    // ──────────────────────────────────────────────
+    // Role Helpers
+    // ──────────────────────────────────────────────
+
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === UserRole::Admin;
     }
 
     public function isRider(): bool
     {
-        return $this->role === 'rider';
+        return $this->role === UserRole::Rider;
     }
 
     public function isCustomer(): bool
     {
-        return $this->role === 'customer';
+        return $this->role === UserRole::Customer;
     }
 
     public function isRestaurantOwner(): bool
     {
-        return $this->role === 'restaurant_owner';
+        return $this->role === UserRole::RestaurantOwner;
     }
 }

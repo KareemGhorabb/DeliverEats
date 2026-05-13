@@ -35,15 +35,18 @@ return [
         ],
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | OAuth Providers (Socialite)
-    |--------------------------------------------------------------------------
-    */
+    'paymob' => [
+        'api_key' => env('PAYMOB_API_KEY'),
+        'integration_id' => env('PAYMOB_INTEGRATION_ID'),
+        'iframe_id' => env('PAYMOB_IFRAME_ID'),
+        'hmac' => env('PAYMOB_HMAC_SECRET'),
+    ],
+
     'google' => [
         'client_id'     => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect'      => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
+        'redirect'      => env('GOOGLE_REDIRECT_URI'),
+        'maps_key'      => env('GOOGLE_MAPS_API_KEY', env('Maps_API_KEY')),
     ],
 
     'github' => [
@@ -52,5 +55,10 @@ return [
         'redirect'      => env('GITHUB_REDIRECT_URI', '/auth/github/callback'),
     ],
 
-];
+    'stripe' => [
+        'key'            => env('STRIPE_KEY'),
+        'secret'         => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
 
+];
