@@ -1,6 +1,24 @@
 <?php
 
+use App\Http\Controllers\SocialAuthController;
 use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| OAuth Social Login Routes (Google, GitHub)
+|--------------------------------------------------------------------------
+| These routes must live in web.php because Socialite performs browser-based
+| redirects. The callback handler returns a JSON Sanctum token for the frontend.
+*/
+Route::middleware('guest')->group(function () {
+    Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirectToProvider'])
+         ->where('provider', 'google|github')
+         ->name('auth.social.redirect');
+
+    Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback'])
+         ->where('provider', 'google|github')
+         ->name('auth.social.callback');
+});
 
 /*
 |--------------------------------------------------------------------------
